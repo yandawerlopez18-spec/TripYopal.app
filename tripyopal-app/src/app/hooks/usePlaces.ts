@@ -14,7 +14,7 @@ export function usePlaces() {
       try {
         const data = await getPlaces();
         setPlaces(data);
-      } catch (err) {
+      } catch {
         setError("No fue posible cargar los lugares");
       } finally {
         setLoading(false);

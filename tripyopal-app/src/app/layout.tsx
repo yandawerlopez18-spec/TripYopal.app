@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Baloo_2, Geist, Geist_Mono, Yellowtail } from "next/font/google";
 import Navbar from "./components/Navbar";
+import { AuthProvider } from "./context/AuthContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,6 +12,18 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const yellowtail = Yellowtail({
+  variable: "--font-script",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const baloo = Baloo_2({
+  variable: "--font-brand",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -26,11 +39,13 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${yellowtail.variable} ${baloo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
-        <Navbar />
-        <main>{children}</main>
+        <AuthProvider>
+          <Navbar />
+          <main>{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

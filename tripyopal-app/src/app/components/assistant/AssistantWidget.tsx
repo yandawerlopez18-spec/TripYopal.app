@@ -45,11 +45,11 @@ export default function AssistantWidget() {
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="text-xl font-semibold text-slate-900">Asistente virtual TripBot</h3>
-      <p className="mt-2 text-sm text-slate-600">Tu guía para descubrir Yopal, eventos, rutas y recomendaciones.</p>
-      <div className="mt-6 rounded-2xl bg-slate-900 p-4 text-white">
-        <p className="text-sm text-emerald-300">TripBot</p>
+    <div>
+      <h3 className="text-center font-[family-name:var(--font-brand)] text-xl font-semibold text-slate-100">Asistente virtual TripBot</h3>
+      <p className="mt-2 text-center text-sm text-slate-400">Tu guía para descubrir Yopal, eventos, rutas y recomendaciones.</p>
+      <div className="mt-6 rounded-2xl bg-forest-950 p-4 text-slate-100">
+        <p className="text-sm text-brand-400">TripBot</p>
         <p className="mt-2 text-sm leading-6">{reply}</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -60,7 +60,7 @@ export default function AssistantWidget() {
               setMessage(item);
               setReply(getReply(item));
             }}
-            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
+            className="rounded-full border border-forest-700 bg-forest-950 px-3 py-2 text-sm text-slate-300 transition hover:bg-forest-800"
           >
             {item}
           </button>
@@ -70,11 +70,11 @@ export default function AssistantWidget() {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Escribe tu pregunta aquí..."
-        className="mt-4 min-h-24 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm"
+        className="mt-4 min-h-24 w-full rounded-2xl border border-forest-700 bg-forest-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-400 focus:outline-none"
       />
       <button
         onClick={handleSend}
-        className="mt-4 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+        className="btn-brand-font mt-4 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
       >
         Enviar
       </button>

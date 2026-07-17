@@ -6,6 +6,7 @@ export type Place = {
   price: string;
   rating?: number;
   location?: string;
+  imageUrl?: string;
 };
 
 export type EventItem = {
@@ -14,6 +15,7 @@ export type EventItem = {
   date: string;
   place: string;
   description: string;
+  imageUrl?: string;
 };
 
 export type RouteItem = {

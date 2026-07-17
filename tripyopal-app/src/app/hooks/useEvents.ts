@@ -14,7 +14,7 @@ export function useEvents() {
       try {
         const data = await getEvents();
         setEvents(data);
-      } catch (err) {
+      } catch {
         setError("No fue posible cargar los eventos");
       } finally {
         setLoading(false);

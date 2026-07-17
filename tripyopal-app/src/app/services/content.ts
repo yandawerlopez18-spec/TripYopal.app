@@ -9,6 +9,7 @@ export const featuredPlaces: Place[] = [
     price: "Gratis",
     rating: 4.8,
     location: "Zona norte",
+    imageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
   },
   {
     id: "plaza-bolivar",
@@ -18,6 +19,7 @@ export const featuredPlaces: Place[] = [
     price: "Gratis",
     rating: 4.7,
     location: "Centro",
+    imageUrl: "https://images.unsplash.com/photo-1519791883288-dc8bd696e667?w=800&q=80",
   },
   {
     id: "parque-la-llanura",
@@ -27,6 +29,7 @@ export const featuredPlaces: Place[] = [
     price: "Bajo",
     rating: 4.6,
     location: "Sur",
+    imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
   },
 ];
 
@@ -37,6 +40,7 @@ export const featuredEvents: EventItem[] = [
     date: "15 julio",
     place: "Plaza principal",
     description: "Degustaciones, música y cultura de la región.",
+    imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
   },
   {
     id: "caminata-ecologica",
@@ -44,6 +48,7 @@ export const featuredEvents: EventItem[] = [
     date: "20 julio",
     place: "Parque La Llanura",
     description: "Recorrido guiado con enfoque ambiental y seguridad.",
+    imageUrl: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80",
   },
   {
     id: "feria-artesanal",
@@ -51,8 +56,57 @@ export const featuredEvents: EventItem[] = [
     date: "25 julio",
     place: "Centro cultural",
     description: "Productos locales, música y experiencias para toda la familia.",
+    imageUrl: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80",
   },
 ];
+
+export function addPlace(place: Omit<Place, "id">) {
+  const newPlace: Place = { ...place, id: crypto.randomUUID() };
+  featuredPlaces.push(newPlace);
+  return newPlace;
+}
+
+export function updatePlace(id: string, updates: Partial<Omit<Place, "id">>) {
+  const place = featuredPlaces.find((entry) => entry.id === id);
+
+  if (place) {
+    Object.assign(place, updates);
+  }
+
+  return place;
+}
+
+export function deletePlace(id: string) {
+  const index = featuredPlaces.findIndex((entry) => entry.id === id);
+
+  if (index !== -1) {
+    featuredPlaces.splice(index, 1);
+  }
+}
+
+export function addEvent(event: Omit<EventItem, "id">) {
+  const newEvent: EventItem = { ...event, id: crypto.randomUUID() };
+  featuredEvents.push(newEvent);
+  return newEvent;
+}
+
+export function updateEvent(id: string, updates: Partial<Omit<EventItem, "id">>) {
+  const event = featuredEvents.find((entry) => entry.id === id);
+
+  if (event) {
+    Object.assign(event, updates);
+  }
+
+  return event;
+}
+
+export function deleteEvent(id: string) {
+  const index = featuredEvents.findIndex((entry) => entry.id === id);
+
+  if (index !== -1) {
+    featuredEvents.splice(index, 1);
+  }
+}
 
 export const featuredRoutes: RouteItem[] = [
   {

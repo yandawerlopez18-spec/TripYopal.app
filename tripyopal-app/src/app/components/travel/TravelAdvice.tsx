@@ -29,21 +29,21 @@ export default function TravelAdvice() {
   const activeProfile = useMemo(() => profiles.find((profile) => profile.id === selected) ?? profiles[1], [selected]);
 
   return (
-    <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="mt-8 border-t border-forest-700 pt-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-slate-900">Consejos de viaje y seguridad</h3>
-          <p className="mt-2 text-sm text-slate-600">Selecciona tu estilo de viaje para recibir una recomendación más útil.</p>
+          <h3 className="font-[family-name:var(--font-brand)] text-xl font-semibold text-slate-100">Consejos de viaje y seguridad</h3>
+          <p className="mt-2 text-sm text-slate-400">Selecciona tu estilo de viaje para recibir una recomendación más útil.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {profiles.map((profile) => (
             <button
               key={profile.id}
               onClick={() => setSelected(profile.id)}
-              className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+              className={`btn-brand-font rounded-full px-3 py-2 text-sm font-semibold transition ${
                 selected === profile.id
-                  ? "bg-emerald-600 text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-brand-500 text-forest-950"
+                  : "border border-forest-700 text-slate-300 hover:bg-forest-800"
               }`}
             >
               {profile.label}
@@ -52,24 +52,24 @@ export default function TravelAdvice() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Recomendación actual</p>
-        <h4 className="mt-2 text-lg font-semibold text-slate-900">{activeProfile.title}</h4>
-        <p className="mt-2 text-sm leading-6 text-slate-600">{activeProfile.description}</p>
+      <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-950 p-5">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-400">Recomendación actual</p>
+        <h4 className="mt-2 text-lg font-semibold text-slate-100">{activeProfile.title}</h4>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{activeProfile.description}</p>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-900">Seguridad</h4>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Mantén tus pertenencias cerca, evita zonas poco iluminadas por la noche y consulta información actualizada.</p>
+        <div className="rounded-2xl border border-forest-700 bg-forest-950 p-4">
+          <h4 className="font-semibold text-slate-100">Seguridad</h4>
+          <p className="mt-2 text-sm leading-6 text-slate-400">Mantén tus pertenencias cerca, evita zonas poco iluminadas por la noche y consulta información actualizada.</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-900">Salud</h4>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Lleva agua, protector solar y revisa el clima antes de salir para planear mejor tu recorrido.</p>
+        <div className="rounded-2xl border border-forest-700 bg-forest-950 p-4">
+          <h4 className="font-semibold text-slate-100">Salud</h4>
+          <p className="mt-2 text-sm leading-6 text-slate-400">Lleva agua, protector solar y revisa el clima antes de salir para planear mejor tu recorrido.</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-900">Medio ambiente</h4>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Respeta las áreas naturales, evita dejar residuos y usa rutas responsables.</p>
+        <div className="rounded-2xl border border-forest-700 bg-forest-950 p-4">
+          <h4 className="font-semibold text-slate-100">Medio ambiente</h4>
+          <p className="mt-2 text-sm leading-6 text-slate-400">Respeta las áreas naturales, evita dejar residuos y usa rutas responsables.</p>
         </div>
       </div>
     </div>

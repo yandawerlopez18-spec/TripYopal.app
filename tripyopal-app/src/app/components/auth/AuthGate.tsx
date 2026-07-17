@@ -6,11 +6,10 @@ import { auth } from "../../lib/firebase";
 
 export default function AuthGate({ children }: { children: (user: User | null) => React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(auth));
 
   useEffect(() => {
     if (!auth) {
-      setLoading(false);
       return;
     }
 

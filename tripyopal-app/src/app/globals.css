@@ -10,6 +10,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-forest-950: #0b1f16;
+  --color-forest-900: #0f2a1d;
+  --color-forest-800: #143624;
+  --color-forest-700: #1b4530;
+  --color-forest-600: #245a3d;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+
+  --container-8xl: 96rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +34,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+.btn-brand-font {
+  font-family: var(--font-brand), Arial, Helvetica, sans-serif;
 }

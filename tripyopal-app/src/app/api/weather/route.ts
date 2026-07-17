@@ -5,6 +5,8 @@ const fallbackWeather = {
   temperature: 28,
   description: "Cielo parcialmente nublado",
   recommended: "Ideal para recorrer la ciudad",
+  humidity: 65,
+  wind: 12,
 };
 
 export async function GET() {
@@ -35,6 +37,8 @@ export async function GET() {
       recommended: data.main?.temp > 30
         ? "Ideal para tomar pausas y visitar lugares con sombra"
         : "Ideal para recorrer la ciudad y disfrutar sus atractivos",
+      humidity: data.main?.humidity ?? 65,
+      wind: Math.round(data.wind?.speed ?? 12),
     });
   } catch {
     return NextResponse.json(fallbackWeather);
