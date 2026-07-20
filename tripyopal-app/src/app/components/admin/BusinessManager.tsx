@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BUSINESS_CATEGORIES, type IconKey } from "../home/categoryIcons";
 import { deletePrestador, listPrestadoresByCategory, registerPrestador, updatePrestador, type Prestador } from "../../services/prestadores";
 import { RESOURCE_CAPABILITY_PRESETS, createScopedAdmin } from "../../services/permissions";
+import ImageUploadField from "./ImageUploadField";
 
 const inputClass = "rounded-2xl border border-forest-700 bg-forest-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-400 focus:outline-none";
 
@@ -214,11 +215,11 @@ export default function BusinessManager() {
                       value={editForm.schedule}
                       onChange={(e) => setEditForm({ ...editForm, schedule: e.target.value })}
                     />
-                    <input
-                      className={`${inputClass} !py-2 sm:col-span-2`}
-                      placeholder="URL de la imagen (opcional)"
+                    <ImageUploadField
+                      className="sm:col-span-2"
+                      compact
                       value={editForm.imageUrl}
-                      onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                      onChange={(value) => setEditForm({ ...editForm, imageUrl: value })}
                     />
                     <textarea
                       className={`${inputClass} sm:col-span-2`}
@@ -257,11 +258,11 @@ export default function BusinessManager() {
                         <button
                           type="button"
                           onClick={() => setExpandedId((current) => (current === prestador.id ? null : prestador.id))}
-                          className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-forest-800"
+                          className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400"
                         >
                           {expandedId === prestador.id ? "Ocultar" : "Ver hoja de vida"}
                         </button>
-                        <button type="button" onClick={() => startEdit(prestador)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-forest-800">
+                        <button type="button" onClick={() => startEdit(prestador)} className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
                           Editar
                         </button>
                         <button type="button" onClick={() => handleDelete(prestador)} className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
@@ -311,11 +312,10 @@ export default function BusinessManager() {
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
             />
-            <input
-              className={`${inputClass} sm:col-span-2`}
-              placeholder="URL de la imagen del establecimiento (opcional)"
+            <ImageUploadField
+              className="sm:col-span-2"
               value={addForm.imageUrl}
-              onChange={(e) => setAddForm({ ...addForm, imageUrl: e.target.value })}
+              onChange={(value) => setAddForm({ ...addForm, imageUrl: value })}
             />
             <textarea
               className={`${inputClass} sm:col-span-2`}

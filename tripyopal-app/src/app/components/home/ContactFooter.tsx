@@ -31,7 +31,7 @@ const socialLinks = [
   },
 ];
 
-const paymentBadges = ["AMEX", "VISA", "PayPal", "DISCOVER", "Mastercard"];
+const paymentBadges = ["Nequi", "VISA", "PayPal", "Bancolombia", "Otros Bancos"];
 
 const contactIcons = {
   Dirección: (

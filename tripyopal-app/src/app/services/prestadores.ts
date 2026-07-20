@@ -1,3 +1,5 @@
+import { loadFromStorage, saveToStorage } from "./persistence";
+
 export type Prestador = {
   id: string;
   name: string;
@@ -12,7 +14,9 @@ export type Prestador = {
   imageUrl?: string;
 };
 
-const prestadores: Prestador[] = [
+const STORAGE_KEY = "tripyopal_prestadores";
+
+const seedPrestadores: Prestador[] = [
   {
     id: "hotel-la-sabana",
     name: "Hotel La Sabana",
@@ -54,6 +58,12 @@ const prestadores: Prestador[] = [
   },
 ];
 
+const prestadores: Prestador[] = loadFromStorage(STORAGE_KEY, seedPrestadores);
+
+function persist() {
+  saveToStorage(STORAGE_KEY, prestadores);
+}
+
 export function registerPrestador(profile: Omit<Prestador, "id">) {
   const prestador: Prestador = {
     id: crypto.randomUUID(),
@@ -61,6 +71,7 @@ export function registerPrestador(profile: Omit<Prestador, "id">) {
   };
 
   prestadores.push(prestador);
+  persist();
   return prestador;
 }
 
@@ -77,6 +88,7 @@ export function updatePrestador(id: string, updates: Partial<Omit<Prestador, "id
 
   if (prestador) {
     Object.assign(prestador, updates);
+    persist();
   }
 
   return prestador;
@@ -87,5 +99,6 @@ export function deletePrestador(id: string) {
 
   if (index !== -1) {
     prestadores.splice(index, 1);
+    persist();
   }
 }

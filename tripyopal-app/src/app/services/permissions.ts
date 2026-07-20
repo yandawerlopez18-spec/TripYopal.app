@@ -1,4 +1,7 @@
 import type { AdminScope, AppUser, Role, UserPermission } from "../types/roles";
+import { loadFromStorage, saveToStorage } from "./persistence";
+
+const USERS_KEY = "tripyopal_users";
 
 export const ROLE_CAPABILITIES: Record<Exclude<Role, "admin">, string[]> = {
   turista: [
@@ -80,7 +83,7 @@ export const RESOURCE_CAPABILITY_PRESETS: Record<AdminScope["resourceType"], str
   ],
 };
 
-const demoUsers: AppUser[] = [
+const seedUsers: AppUser[] = [
   {
     id: "super-1",
     name: "Administrador principal",
@@ -110,6 +113,12 @@ const demoUsers: AppUser[] = [
   },
 ];
 
+const demoUsers: AppUser[] = loadFromStorage(USERS_KEY, seedUsers);
+
+function persistUsers() {
+  saveToStorage(USERS_KEY, demoUsers);
+}
+
 function resolvePermission(user: AppUser): UserPermission {
   if (user.role === "admin" && user.scope) {
     return { role: user.role, capabilities: user.scope.capabilities, scope: user.scope };
@@ -130,7 +139,40 @@ export function getPermissionsForUser(email: string, password: string): UserPerm
 
 export function createDemoUser(user: AppUser) {
   demoUsers.push(user);
+  persistUsers();
   return user;
+}
+
+export function findUserByEmail(email: string) {
+  return demoUsers.find((entry) => entry.email === email);
+}
+
+export function listUsers() {
+  return demoUsers;
+}
+
+export function listAdmins() {
+  return demoUsers.filter((entry) => entry.role === "admin" && entry.scope);
+}
+
+export function updateUser(id: string, updates: Partial<Omit<AppUser, "id">>) {
+  const user = demoUsers.find((entry) => entry.id === id);
+
+  if (user) {
+    Object.assign(user, updates);
+    persistUsers();
+  }
+
+  return user;
+}
+
+export function deleteUser(id: string) {
+  const index = demoUsers.findIndex((entry) => entry.id === id);
+
+  if (index !== -1) {
+    demoUsers.splice(index, 1);
+    persistUsers();
+  }
 }
 
 export function createScopedAdmin(input: {

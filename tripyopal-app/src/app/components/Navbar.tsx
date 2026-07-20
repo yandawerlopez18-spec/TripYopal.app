@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -23,7 +24,15 @@ function getRoleLabel(permissions: ReturnType<typeof useAuth>["permissions"]) {
 
 export default function Navbar() {
   const { permissions, logout } = useAuth();
+  const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    router.push(`/buscar?q=${encodeURIComponent(query.trim())}`);
+  };
 
   return (
     <nav className="border-b border-forest-700/60 bg-forest-950 text-slate-100">
@@ -48,28 +57,32 @@ export default function Navbar() {
           </Link>
 
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleSearch}
             className="flex items-center gap-2 rounded-full border border-forest-700 bg-forest-900 px-3 py-1.5"
           >
-            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-slate-400" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-            </svg>
+            <button type="submit" aria-label="Buscar" className="text-slate-400 transition hover:text-brand-400">
+              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+              </svg>
+            </button>
             <input
               type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar lugares, eventos, rutas..."
               className="w-52 bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none lg:w-80"
             />
           </form>
 
           {permissions?.role === "superadmin" || permissions?.role === "admin" ? (
-            <Link href="/admin" className="btn-brand-font rounded-full border border-forest-700 px-3 py-2 transition hover:bg-forest-800">
+            <Link href="/admin" className="btn-brand-font rounded-full bg-brand-500 px-3 py-2 font-semibold text-forest-950 transition hover:bg-brand-400">
               Admin
             </Link>
           ) : null}
 
           {!permissions ? (
-            <Link href="/registro" className="btn-brand-font rounded-full border border-forest-700 px-3 py-2 transition hover:bg-forest-800">
+            <Link href="/registro" className="btn-brand-font rounded-full bg-brand-500 px-3 py-2 font-semibold text-forest-950 transition hover:bg-brand-400">
               Registro
             </Link>
           ) : null}
@@ -109,7 +122,7 @@ export default function Navbar() {
                         logout();
                         setProfileOpen(false);
                       }}
-                      className="rounded-full border border-forest-700 px-3 py-2 text-sm text-slate-300 transition hover:bg-forest-800"
+                      className="btn-brand-font rounded-full bg-brand-500 px-3 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
                     >
                       Cerrar sesión
                     </button>

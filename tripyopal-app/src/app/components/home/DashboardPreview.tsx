@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { BUSINESS_CATEGORIES, CategoryIcon } from "./categoryIcons";
 import { listPrestadores, listPrestadoresByCategory } from "../../services/prestadores";
 import { featuredEvents, featuredPlaces } from "../../services/content";
@@ -125,15 +124,6 @@ export default function DashboardPreview() {
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          <Link
-            href="/admin"
-            className="btn-brand-font rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
-          >
-            Ver panel completo
-          </Link>
         </div>
       </div>
     </section>

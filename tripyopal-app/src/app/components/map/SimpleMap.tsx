@@ -19,21 +19,19 @@ export default function SimpleMap() {
           referrerPolicy="no-referrer-when-downgrade"
           title="Mapa de Yopal"
         />
+      </div>
+      <div className="mt-4 flex justify-center">
         <a
           href={`https://www.google.com/maps?q=Yopal,Casanare&z=${config.zoom}`}
           target="_blank"
           rel="noreferrer"
-          className="btn-brand-font absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-forest-950/90 px-3 py-1.5 text-xs font-semibold text-brand-400 shadow-sm backdrop-blur transition hover:bg-forest-900"
+          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
         >
           Abrir en Maps
-          <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth="2.5">
+          <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" stroke="currentColor" strokeWidth="2.5">
             <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </a>
-      </div>
-      <div className="mt-4 flex items-center justify-between rounded-2xl bg-forest-800 px-4 py-3 text-sm">
-        <span className="text-slate-200">📍 Mirador de Yopal</span>
-        <span className="font-semibold text-brand-400">★ 4.8</span>
       </div>
     </div>
   );

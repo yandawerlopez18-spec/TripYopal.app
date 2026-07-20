@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { addEvent, deleteEvent, featuredEvents, updateEvent } from "../../services/content";
 import type { EventItem } from "../../types";
+import ImageUploadField from "./ImageUploadField";
 
 const inputClass = "rounded-2xl border border-forest-700 bg-forest-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-400 focus:outline-none";
 
-const emptyForm = { title: "", date: "", place: "", description: "", imageUrl: "" };
+const emptyForm = { title: "", date: "", place: "", description: "", imageUrl: "", time: "", modality: "" };
 
 export default function EventsManager() {
   const [, setRefreshKey] = useState(0);
@@ -20,7 +21,15 @@ export default function EventsManager() {
 
   const startEdit = (event: EventItem) => {
     setEditingId(event.id);
-    setEditForm({ title: event.title, date: event.date, place: event.place, description: event.description, imageUrl: event.imageUrl ?? "" });
+    setEditForm({
+      title: event.title,
+      date: event.date,
+      place: event.place,
+      description: event.description,
+      imageUrl: event.imageUrl ?? "",
+      time: event.time ?? "",
+      modality: event.modality ?? "",
+    });
   };
 
   const saveEdit = (id: string) => {
@@ -29,7 +38,15 @@ export default function EventsManager() {
       return;
     }
 
-    updateEvent(id, editForm);
+    updateEvent(id, {
+      title: editForm.title,
+      date: editForm.date,
+      place: editForm.place,
+      description: editForm.description,
+      imageUrl: editForm.imageUrl || undefined,
+      time: editForm.time || undefined,
+      modality: editForm.modality || undefined,
+    });
     setEditingId(null);
     setMessage("");
     refresh();
@@ -52,7 +69,15 @@ export default function EventsManager() {
       return;
     }
 
-    addEvent(addForm);
+    addEvent({
+      title: addForm.title,
+      date: addForm.date,
+      place: addForm.place,
+      description: addForm.description,
+      imageUrl: addForm.imageUrl || undefined,
+      time: addForm.time || undefined,
+      modality: addForm.modality || undefined,
+    });
     setMessage(`"${addForm.title}" se agregó a Eventos en tiempo real.`);
     setAddForm(emptyForm);
     setShowAddForm(false);
@@ -81,8 +106,10 @@ export default function EventsManager() {
               <div className="grid gap-2 sm:grid-cols-2">
                 <input className={inputClass} placeholder="Título" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
                 <input className={inputClass} placeholder="Fecha" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+                <input className={inputClass} placeholder="Hora (opcional)" value={editForm.time} onChange={(e) => setEditForm({ ...editForm, time: e.target.value })} />
+                <input className={inputClass} placeholder="Modalidad (Presencial/Virtual)" value={editForm.modality} onChange={(e) => setEditForm({ ...editForm, modality: e.target.value })} />
                 <input className={`${inputClass} sm:col-span-2`} placeholder="Lugar" value={editForm.place} onChange={(e) => setEditForm({ ...editForm, place: e.target.value })} />
-                <input className={`${inputClass} sm:col-span-2`} placeholder="URL de la imagen (opcional)" value={editForm.imageUrl} onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })} />
+                <ImageUploadField className="sm:col-span-2" compact value={editForm.imageUrl} onChange={(value) => setEditForm({ ...editForm, imageUrl: value })} />
                 <textarea className={`${inputClass} sm:col-span-2`} placeholder="Descripción" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
                 <div className="flex gap-2 sm:col-span-2">
                   <button type="button" onClick={() => saveEdit(event.id)} className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950">
@@ -108,7 +135,7 @@ export default function EventsManager() {
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button type="button" onClick={() => startEdit(event)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-forest-800">
+                  <button type="button" onClick={() => startEdit(event)} className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
                     Editar
                   </button>
                   <button type="button" onClick={() => handleDelete(event)} className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
@@ -125,8 +152,10 @@ export default function EventsManager() {
         <form onSubmit={handleAddSubmit} className="mt-5 grid gap-3 border-t border-forest-700 pt-5 sm:grid-cols-2">
           <input className={inputClass} placeholder="Título" value={addForm.title} onChange={(e) => setAddForm({ ...addForm, title: e.target.value })} />
           <input className={inputClass} placeholder="Fecha" value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })} />
+          <input className={inputClass} placeholder="Hora (opcional)" value={addForm.time} onChange={(e) => setAddForm({ ...addForm, time: e.target.value })} />
+          <input className={inputClass} placeholder="Modalidad (Presencial/Virtual)" value={addForm.modality} onChange={(e) => setAddForm({ ...addForm, modality: e.target.value })} />
           <input className={`${inputClass} sm:col-span-2`} placeholder="Lugar" value={addForm.place} onChange={(e) => setAddForm({ ...addForm, place: e.target.value })} />
-          <input className={`${inputClass} sm:col-span-2`} placeholder="URL de la imagen (opcional)" value={addForm.imageUrl} onChange={(e) => setAddForm({ ...addForm, imageUrl: e.target.value })} />
+          <ImageUploadField className="sm:col-span-2" value={addForm.imageUrl} onChange={(value) => setAddForm({ ...addForm, imageUrl: value })} />
           <textarea className={`${inputClass} sm:col-span-2`} placeholder="Descripción" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })} />
           <button className="rounded-full bg-brand-500 px-4 py-3 text-sm font-semibold text-forest-950 transition hover:bg-brand-400 sm:col-span-2">
             Agregar evento

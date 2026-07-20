@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Baloo_2, Geist, Geist_Mono, Yellowtail } from "next/font/google";
+import FloatingChatWidget from "./components/assistant/FloatingChatWidget";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import "./globals.css";
@@ -45,6 +46,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <main>{children}</main>
+          <FloatingChatWidget />
         </AuthProvider>
       </body>
     </html>

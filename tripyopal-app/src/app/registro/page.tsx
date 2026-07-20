@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import { createDemoUser } from "../services/permissions";
+import { createDemoUser, findUserByEmail } from "../services/permissions";
 import { COLOMBIA_DEPARTMENTS, COLOMBIA_DEPARTMENT_NAMES } from "../services/colombia";
 
 const inputClass =
@@ -17,6 +18,7 @@ function formatPhone(value: string) {
 
 export default function RegistroPage() {
   const { login } = useAuth();
+  const router = useRouter();
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
@@ -74,6 +76,11 @@ export default function RegistroPage() {
       return;
     }
 
+    if (findUserByEmail(form.email)) {
+      setStatus("Ya existe una cuenta registrada con este correo. Inicia sesión en su lugar.");
+      return;
+    }
+
     createDemoUser({
       id: crypto.randomUUID(),
       name: form.nombre,
@@ -92,6 +99,7 @@ export default function RegistroPage() {
 
     login(form.email, form.password);
     setStatus(`Cuenta creada, ¡bienvenido ${form.nombre}! Ya iniciaste sesión como turista.`);
+    router.push("/");
   };
 
   return (

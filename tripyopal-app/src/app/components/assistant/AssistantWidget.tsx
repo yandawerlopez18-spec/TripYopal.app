@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAssistantReply } from "../../services/assistant";
 
 const suggestions = [
   "¿Qué lugares me recomiendas hoy?",
@@ -8,39 +9,13 @@ const suggestions = [
   "¿Qué ruta puedo hacer en un día?",
 ];
 
-function getReply(question: string) {
-  const normalized = question.toLowerCase();
-
-  if (normalized.includes("lugar") || normalized.includes("lugares")) {
-    return "Te recomiendo visitar el mirador de Yopal, la Plaza de Bolívar y los parques cercanos para una experiencia cultural y relajada.";
-  }
-
-  if (normalized.includes("evento") || normalized.includes("seman")) {
-    return "En esta semana suele haber actividades culturales, gastronomía local y recorridos en la zona urbana. Te recomiendo revisar la sección de eventos para ver novedades.";
-  }
-
-  if (normalized.includes("ruta") || normalized.includes("día")) {
-    return "Una ruta completa para un día sería: desayuno en el centro, visita a lugares emblemáticos, almuerzo típico y cierre con un mirador o plaza al atardecer.";
-  }
-
-  if (normalized.includes("presupuesto")) {
-    return "Para un presupuesto bajo, prioriza plazas, parques y recorridos sencillos. Para uno medio, mezcla gastronomía y transporte. Para uno alto, considera actividades guiadas y alojamiento premium.";
-  }
-
-  if (normalized.includes("seguro") || normalized.includes("salud")) {
-    return "Mantente hidratado, usa protección solar y verifica las condiciones del clima antes de salir. Si necesitas ayuda, consulta los puntos de salud y emergencia cercanos.";
-  }
-
-  return "Puedo ayudarte con lugares, eventos, rutas, presupuesto, salud y seguridad en Yopal. Prueba con una pregunta más concreta.";
-}
-
 export default function AssistantWidget() {
   const [message, setMessage] = useState("");
   const [reply, setReply] = useState("Hola, puedo ayudarte a encontrar lugares, eventos y rutas recomendadas para tu visita.");
 
   const handleSend = () => {
     if (!message.trim()) return;
-    setReply(getReply(message));
+    setReply(getAssistantReply(message));
     setMessage("");
   };
 
@@ -58,9 +33,9 @@ export default function AssistantWidget() {
             key={item}
             onClick={() => {
               setMessage(item);
-              setReply(getReply(item));
+              setReply(getAssistantReply(item));
             }}
-            className="rounded-full border border-forest-700 bg-forest-950 px-3 py-2 text-sm text-slate-300 transition hover:bg-forest-800"
+            className="btn-brand-font rounded-full bg-brand-500 px-3 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
           >
             {item}
           </button>

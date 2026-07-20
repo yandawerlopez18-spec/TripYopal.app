@@ -6,7 +6,10 @@ import AdminDashboard from "../components/dashboard/AdminDashboard";
 import BusinessManager from "../components/admin/BusinessManager";
 import PlacesManager from "../components/admin/PlacesManager";
 import EventsManager from "../components/admin/EventsManager";
+import RoutesManager from "../components/admin/RoutesManager";
 import SiteContentManager from "../components/admin/SiteContentManager";
+import AdministratorsManager from "../components/admin/AdministratorsManager";
+import UsersManager from "../components/admin/UsersManager";
 import { useAuth } from "../context/AuthContext";
 import { RESOURCE_CAPABILITY_PRESETS, createScopedAdmin } from "../services/permissions";
 import type { ResourceType } from "../types/roles";
@@ -131,7 +134,10 @@ const tabs = [
   { key: "negocios", label: "Negocios" },
   { key: "lugares", label: "Lugares destacados" },
   { key: "eventos", label: "Eventos" },
+  { key: "rutas", label: "Rutas" },
   { key: "contenido", label: "Contenido del sitio" },
+  { key: "administradores", label: "Administradores" },
+  { key: "usuarios", label: "Usuarios" },
 ] as const;
 
 type TabKey = (typeof tabs)[number]["key"];
@@ -170,7 +176,10 @@ function SuperadminPanel() {
         ) : null}
         {tab === "lugares" ? <PlacesManager /> : null}
         {tab === "eventos" ? <EventsManager /> : null}
+        {tab === "rutas" ? <RoutesManager /> : null}
         {tab === "contenido" ? <SiteContentManager /> : null}
+        {tab === "administradores" ? <AdministratorsManager /> : null}
+        {tab === "usuarios" ? <UsersManager /> : null}
       </div>
     </div>
   );

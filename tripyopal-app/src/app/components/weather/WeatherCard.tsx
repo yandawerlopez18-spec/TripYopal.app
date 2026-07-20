@@ -1,26 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getWeatherForYopal } from "../../services/external/weather";
+import { getWeatherForYopal, type WeatherResponse } from "../../services/external/weather";
 import { climateTips } from "../../services/siteContent";
 
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 export default function WeatherCard() {
-  const [weather, setWeather] = useState<{
-    city: string;
-    temperature: number;
-    description: string;
-    recommended: string;
-    humidity: number;
-    wind: number;
-  } | null>(null);
+  const [weather, setWeather] = useState<WeatherResponse | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadWeather() {
       const data = await getWeatherForYopal();
-      setWeather(data);
+      if (!cancelled) {
+        setWeather(data);
+      }
     }
 
     loadWeather();
+    const interval = setInterval(loadWeather, REFRESH_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -29,19 +34,29 @@ export default function WeatherCard() {
       <p className="mt-1 text-sm text-slate-400">Información actual para que planifiques mejor tu día.</p>
 
       {weather ? (
-        <>
-          <div className="mt-5 flex items-end justify-between">
-            <div>
-              <p className="text-4xl font-semibold">{weather.temperature}°C</p>
-              <p className="mt-1 text-sm text-slate-300">{weather.description}</p>
+        <div className="mt-5 flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+            alt={weather.description}
+            className="h-16 w-16"
+          />
+          <p className="text-3xl font-semibold">{weather.temperature}°C</p>
+          <p className="mt-1 text-sm capitalize text-slate-300">{weather.description}</p>
+
+          <div className="mt-4 grid w-full grid-cols-2 gap-2 text-xs text-slate-300">
+            <div className="rounded-xl bg-forest-800 p-2">
+              <p className="text-slate-500">Humedad</p>
+              <p className="mt-0.5 font-semibold">{weather.humidity}%</p>
             </div>
-            <div className="text-right text-sm text-slate-400">
-              <p>Humedad: {weather.humidity}%</p>
-              <p>Viento: {weather.wind} km/h</p>
+            <div className="rounded-xl bg-forest-800 p-2">
+              <p className="text-slate-500">Viento</p>
+              <p className="mt-0.5 font-semibold">{weather.wind} km/h</p>
             </div>
           </div>
-          <p className="mt-3 text-sm text-slate-300">{weather.recommended}</p>
-        </>
+
+          <p className="mt-4 text-sm text-slate-300">{weather.recommended}</p>
+        </div>
       ) : (
         <p className="mt-5 text-sm text-slate-400">Cargando clima...</p>
       )}

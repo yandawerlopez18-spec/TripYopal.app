@@ -33,7 +33,7 @@ function CategoryCard({ category, label, prestadores }: { category: IconKey; lab
         </span>
         <p className="text-sm font-semibold text-slate-300">{label}</p>
         <p className="text-xs text-slate-500">Aún no hay negocios registrados en esta categoría.</p>
-        <Link href="/registro" className="text-xs font-semibold text-brand-400 hover:text-brand-300">
+        <Link href="/registro" className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
           Registrar negocio →
         </Link>
       </div>

@@ -1,6 +1,8 @@
 // Datos críticos cargados manualmente (no generados por IA), según regla del proyecto.
 // Editable desde el panel de superadministrador (pestaña "Contenido del sitio").
 
+import { loadFromStorage, saveToStorage } from "./persistence";
+
 export type SafetyPoint = {
   id: string;
   type: string;
@@ -29,7 +31,13 @@ export type ClimateTip = {
   description: string;
 };
 
-export const safetyPoints: SafetyPoint[] = [
+const SAFETY_KEY = "tripyopal_safety_points";
+const EMERGENCY_KEY = "tripyopal_emergency_contacts";
+const TIPS_KEY = "tripyopal_tips";
+const CLIMATE_KEY = "tripyopal_climate_tips";
+const SITE_CONTENT_KEY = "tripyopal_site_content";
+
+const seedSafetyPoints: SafetyPoint[] = [
   {
     id: "policia-yopal",
     type: "Estación de Policía",
@@ -50,7 +58,7 @@ export const safetyPoints: SafetyPoint[] = [
   },
 ];
 
-export const emergencyContacts: EmergencyContact[] = [
+const seedEmergencyContacts: EmergencyContact[] = [
   {
     id: "hospital-orinoquia",
     type: "Hospital",
@@ -65,7 +73,7 @@ export const emergencyContacts: EmergencyContact[] = [
   },
 ];
 
-export const tips: Tip[] = [
+const seedTips: Tip[] = [
   {
     id: "que-llevar",
     category: "Qué llevar",
@@ -78,7 +86,7 @@ export const tips: Tip[] = [
   },
 ];
 
-export const climateTips: ClimateTip[] = [
+const seedClimateTips: ClimateTip[] = [
   {
     id: "temporada-seca",
     season: "Diciembre a Marzo",
@@ -86,7 +94,7 @@ export const climateTips: ClimateTip[] = [
   },
 ];
 
-export const siteContent = {
+const seedSiteContent = {
   offer: {
     eyebrow: "Nuestra oferta",
     title: "Descubre la diversidad de Casanare",
@@ -104,47 +112,66 @@ export const siteContent = {
   },
 };
 
-function addRecord<T extends { id: string }>(list: T[], record: Omit<T, "id">) {
+export const safetyPoints: SafetyPoint[] = loadFromStorage(SAFETY_KEY, seedSafetyPoints);
+export const emergencyContacts: EmergencyContact[] = loadFromStorage(EMERGENCY_KEY, seedEmergencyContacts);
+export const tips: Tip[] = loadFromStorage(TIPS_KEY, seedTips);
+export const climateTips: ClimateTip[] = loadFromStorage(CLIMATE_KEY, seedClimateTips);
+export const siteContent = loadFromStorage(SITE_CONTENT_KEY, seedSiteContent);
+
+function addRecord<T extends { id: string }>(list: T[], record: Omit<T, "id">, key: string) {
   const newRecord = { ...record, id: crypto.randomUUID() } as T;
   list.push(newRecord);
+  saveToStorage(key, list);
   return newRecord;
 }
 
-function updateRecord<T extends { id: string }>(list: T[], id: string, updates: Partial<Omit<T, "id">>) {
+function updateRecord<T extends { id: string }>(list: T[], id: string, updates: Partial<Omit<T, "id">>, key: string) {
   const record = list.find((entry) => entry.id === id);
-  if (record) Object.assign(record, updates);
+
+  if (record) {
+    Object.assign(record, updates);
+    saveToStorage(key, list);
+  }
+
   return record;
 }
 
-function deleteRecord<T extends { id: string }>(list: T[], id: string) {
+function deleteRecord<T extends { id: string }>(list: T[], id: string, key: string) {
   const index = list.findIndex((entry) => entry.id === id);
-  if (index !== -1) list.splice(index, 1);
+
+  if (index !== -1) {
+    list.splice(index, 1);
+    saveToStorage(key, list);
+  }
 }
 
-export const addSafetyPoint = (record: Omit<SafetyPoint, "id">) => addRecord(safetyPoints, record);
-export const updateSafetyPoint = (id: string, updates: Partial<Omit<SafetyPoint, "id">>) => updateRecord(safetyPoints, id, updates);
-export const deleteSafetyPoint = (id: string) => deleteRecord(safetyPoints, id);
+export const addSafetyPoint = (record: Omit<SafetyPoint, "id">) => addRecord(safetyPoints, record, SAFETY_KEY);
+export const updateSafetyPoint = (id: string, updates: Partial<Omit<SafetyPoint, "id">>) => updateRecord(safetyPoints, id, updates, SAFETY_KEY);
+export const deleteSafetyPoint = (id: string) => deleteRecord(safetyPoints, id, SAFETY_KEY);
 
-export const addEmergencyContact = (record: Omit<EmergencyContact, "id">) => addRecord(emergencyContacts, record);
-export const updateEmergencyContact = (id: string, updates: Partial<Omit<EmergencyContact, "id">>) => updateRecord(emergencyContacts, id, updates);
-export const deleteEmergencyContact = (id: string) => deleteRecord(emergencyContacts, id);
+export const addEmergencyContact = (record: Omit<EmergencyContact, "id">) => addRecord(emergencyContacts, record, EMERGENCY_KEY);
+export const updateEmergencyContact = (id: string, updates: Partial<Omit<EmergencyContact, "id">>) => updateRecord(emergencyContacts, id, updates, EMERGENCY_KEY);
+export const deleteEmergencyContact = (id: string) => deleteRecord(emergencyContacts, id, EMERGENCY_KEY);
 
-export const addTip = (record: Omit<Tip, "id">) => addRecord(tips, record);
-export const updateTip = (id: string, updates: Partial<Omit<Tip, "id">>) => updateRecord(tips, id, updates);
-export const deleteTip = (id: string) => deleteRecord(tips, id);
+export const addTip = (record: Omit<Tip, "id">) => addRecord(tips, record, TIPS_KEY);
+export const updateTip = (id: string, updates: Partial<Omit<Tip, "id">>) => updateRecord(tips, id, updates, TIPS_KEY);
+export const deleteTip = (id: string) => deleteRecord(tips, id, TIPS_KEY);
 
-export const addClimateTip = (record: Omit<ClimateTip, "id">) => addRecord(climateTips, record);
-export const updateClimateTip = (id: string, updates: Partial<Omit<ClimateTip, "id">>) => updateRecord(climateTips, id, updates);
-export const deleteClimateTip = (id: string) => deleteRecord(climateTips, id);
+export const addClimateTip = (record: Omit<ClimateTip, "id">) => addRecord(climateTips, record, CLIMATE_KEY);
+export const updateClimateTip = (id: string, updates: Partial<Omit<ClimateTip, "id">>) => updateRecord(climateTips, id, updates, CLIMATE_KEY);
+export const deleteClimateTip = (id: string) => deleteRecord(climateTips, id, CLIMATE_KEY);
 
 export function updateOffer(updates: Partial<typeof siteContent.offer>) {
   Object.assign(siteContent.offer, updates);
+  saveToStorage(SITE_CONTENT_KEY, siteContent);
 }
 
 export function updateCta(updates: Partial<typeof siteContent.cta>) {
   Object.assign(siteContent.cta, updates);
+  saveToStorage(SITE_CONTENT_KEY, siteContent);
 }
 
 export function updateContact(updates: Partial<typeof siteContent.contact>) {
   Object.assign(siteContent.contact, updates);
+  saveToStorage(SITE_CONTENT_KEY, siteContent);
 }

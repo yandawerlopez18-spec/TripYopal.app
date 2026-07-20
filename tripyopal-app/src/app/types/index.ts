@@ -16,6 +16,8 @@ export type EventItem = {
   place: string;
   description: string;
   imageUrl?: string;
+  time?: string;
+  modality?: string;
 };
 
 export type RouteItem = {
@@ -24,4 +26,5 @@ export type RouteItem = {
   duration: string;
   description: string;
   budget: string;
+  imageUrl?: string;
 };

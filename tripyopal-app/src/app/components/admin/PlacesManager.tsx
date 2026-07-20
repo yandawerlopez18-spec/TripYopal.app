@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addPlace, deletePlace, featuredPlaces, updatePlace } from "../../services/content";
 import type { Place } from "../../types";
+import ImageUploadField from "./ImageUploadField";
 
 const inputClass = "rounded-2xl border border-forest-700 bg-forest-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-400 focus:outline-none";
 
@@ -111,7 +112,7 @@ export default function PlacesManager() {
                 <input className={inputClass} placeholder="Precio (Gratis / Bajo / Medio / Alto)" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
                 <input className={inputClass} placeholder="Rating (opcional)" value={editForm.rating} onChange={(e) => setEditForm({ ...editForm, rating: e.target.value })} />
                 <input className={`${inputClass} sm:col-span-2`} placeholder="Ubicación (opcional)" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} />
-                <input className={`${inputClass} sm:col-span-2`} placeholder="URL de la imagen (opcional)" value={editForm.imageUrl} onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })} />
+                <ImageUploadField className="sm:col-span-2" compact value={editForm.imageUrl} onChange={(value) => setEditForm({ ...editForm, imageUrl: value })} />
                 <textarea className={`${inputClass} sm:col-span-2`} placeholder="Descripción" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
                 <div className="flex gap-2 sm:col-span-2">
                   <button type="button" onClick={() => saveEdit(place.id)} className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950">
@@ -140,7 +141,7 @@ export default function PlacesManager() {
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button type="button" onClick={() => startEdit(place)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-forest-800">
+                  <button type="button" onClick={() => startEdit(place)} className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
                     Editar
                   </button>
                   <button type="button" onClick={() => handleDelete(place)} className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
@@ -160,7 +161,7 @@ export default function PlacesManager() {
           <input className={inputClass} placeholder="Precio (Gratis / Bajo / Medio / Alto)" value={addForm.price} onChange={(e) => setAddForm({ ...addForm, price: e.target.value })} />
           <input className={inputClass} placeholder="Rating (opcional)" value={addForm.rating} onChange={(e) => setAddForm({ ...addForm, rating: e.target.value })} />
           <input className={`${inputClass} sm:col-span-2`} placeholder="Ubicación (opcional)" value={addForm.location} onChange={(e) => setAddForm({ ...addForm, location: e.target.value })} />
-          <input className={`${inputClass} sm:col-span-2`} placeholder="URL de la imagen (opcional)" value={addForm.imageUrl} onChange={(e) => setAddForm({ ...addForm, imageUrl: e.target.value })} />
+          <ImageUploadField className="sm:col-span-2" value={addForm.imageUrl} onChange={(value) => setAddForm({ ...addForm, imageUrl: value })} />
           <textarea className={`${inputClass} sm:col-span-2`} placeholder="Descripción" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })} />
           <button className="rounded-full bg-brand-500 px-4 py-3 text-sm font-semibold text-forest-950 transition hover:bg-brand-400 sm:col-span-2">
             Agregar lugar

@@ -25,11 +25,11 @@ export default function LugarDetallePage({ params }: { params: Promise<{ slug: s
   }
 
   return (
-    <main className="min-h-screen bg-forest-950 px-6 py-16 text-slate-100 lg:px-8">
+    <main className="min-h-screen bg-forest-950 px-6 py-6 text-slate-100 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <Link
           href="/lugares"
-          className="btn-brand-font inline-flex items-center gap-2 rounded-full border border-forest-700 bg-forest-900 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-400 hover:bg-forest-800 hover:text-brand-400"
+          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
         >
           ← Volver a lugares
         </Link>

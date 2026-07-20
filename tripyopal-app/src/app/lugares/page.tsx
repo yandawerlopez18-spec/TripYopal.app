@@ -7,6 +7,13 @@ import { formatPrice } from "../utils/formatters";
 
 const budgetOptions = ["Todos", "Gratis", "Bajo", "Medio", "Alto"];
 
+const gradients = [
+  "linear-gradient(135deg,#f59e0b,#166534)",
+  "linear-gradient(135deg,#0ea5e9,#166534)",
+  "linear-gradient(135deg,#22c55e,#0f2a1d)",
+  "linear-gradient(135deg,#fb7185,#065f46)",
+];
+
 export default function LugaresPage() {
   const { places, loading, error } = usePlaces();
   const [selectedCategory, setSelectedCategory] = useState("Todas");
@@ -26,9 +33,16 @@ export default function LugaresPage() {
   }, [places, selectedBudget, selectedCategory]);
 
   return (
-    <main className="min-h-screen bg-forest-950 px-6 py-16 text-slate-100 lg:px-8">
+    <main className="min-h-screen bg-forest-950 px-6 py-6 text-slate-100 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
+        <Link
+          href="/"
+          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+        >
+          ← Volver al inicio
+        </Link>
+
+        <div className="mt-6 rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
           <div className="text-center">
             <h1 className="font-[family-name:var(--font-brand)] text-4xl font-bold text-white sm:text-5xl">Lugares turísticos</h1>
             <p className="mx-auto mt-3 max-w-2xl text-slate-400">
@@ -77,15 +91,26 @@ export default function LugaresPage() {
           {loading && <p className="mt-8 text-slate-400">Cargando lugares...</p>}
           {error && <p className="mt-8 text-red-400">{error}</p>}
           <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredPlaces.map((place) => (
-              <article key={place.id} className="rounded-2xl border border-forest-700 bg-forest-950 p-6 shadow-sm">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-400">{place.category}</p>
-                <h2 className="mt-2 text-xl font-semibold text-slate-100">{place.name}</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-400">{place.description}</p>
-                <p className="mt-4 text-sm font-semibold text-brand-400">{formatPrice(place.price)}</p>
-                <Link href={`/lugares/${place.id}`} className="mt-5 inline-flex text-sm font-semibold text-brand-400 hover:text-brand-300">
-                  Ver detalle →
-                </Link>
+            {filteredPlaces.map((place, index) => (
+              <article key={place.id} className="overflow-hidden rounded-2xl border border-forest-700 bg-forest-950 shadow-sm">
+                {place.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={place.imageUrl} alt={place.name} className="h-44 w-full object-cover" />
+                ) : (
+                  <div className="h-44 w-full" style={{ background: gradients[index % gradients.length] }} />
+                )}
+                <div className="p-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-400">{place.category}</p>
+                  <h2 className="mt-2 text-xl font-semibold text-slate-100">{place.name}</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-400">{place.description}</p>
+                  <p className="mt-4 text-sm font-semibold text-brand-400">{formatPrice(place.price)}</p>
+                  <Link
+                    href={`/lugares/${place.id}`}
+                    className="btn-brand-font mt-5 inline-flex items-center gap-2 rounded-full bg-brand-500 px-3 py-1.5 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+                  >
+                    Ver detalle →
+                  </Link>
+                </div>
               </article>
             ))}
           </div>

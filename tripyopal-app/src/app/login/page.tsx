@@ -82,7 +82,7 @@ export default function LoginPage() {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
-          <button className="w-full rounded-2xl bg-brand-500 px-4 py-3 font-semibold text-forest-950 transition hover:bg-brand-400">
+          <button className="w-full rounded-full bg-brand-500 px-4 py-3 font-semibold text-forest-950 transition hover:bg-brand-400">
             Entrar
           </button>
         </form>

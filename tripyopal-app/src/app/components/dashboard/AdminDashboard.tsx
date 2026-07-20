@@ -6,13 +6,16 @@ const alerts = [
   "1 ruta necesita revisión de seguridad",
 ];
 
-type ModuleKey = "negocios" | "lugares" | "eventos" | "contenido";
+type ModuleKey = "negocios" | "lugares" | "eventos" | "rutas" | "contenido" | "administradores" | "usuarios";
 
 const modules: { key: ModuleKey; label: string; description: string }[] = [
   { key: "negocios", label: "Negocios", description: "Ver, agregar, editar o eliminar negocios por categoría" },
   { key: "lugares", label: "Lugares destacados", description: "Gestionar Recomendaciones para ti" },
   { key: "eventos", label: "Eventos", description: "Gestionar Eventos en tiempo real" },
+  { key: "rutas", label: "Rutas", description: "Gestionar Rutas recomendadas" },
   { key: "contenido", label: "Contenido del sitio", description: "Seguridad, emergencias, clima, oferta y contacto" },
+  { key: "administradores", label: "Administradores", description: "Ver todos los administradores y su recurso asignado" },
+  { key: "usuarios", label: "Usuarios", description: "Ver todos los usuarios activos o registrados" },
 ];
 
 const userRoles = [

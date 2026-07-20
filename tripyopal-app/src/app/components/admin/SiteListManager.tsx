@@ -153,7 +153,7 @@ export default function SiteListManager<T extends { id: string }>({
                     {summary(item).secondary ? <p className="truncate text-xs text-slate-400">{summary(item).secondary}</p> : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <button type="button" onClick={() => startEdit(item)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-forest-800">
+                    <button type="button" onClick={() => startEdit(item)} className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
                       Editar
                     </button>
                     <button type="button" onClick={() => handleDelete(item)} className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">

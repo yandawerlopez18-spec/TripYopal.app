@@ -28,7 +28,7 @@ export default function CategoriaPage({ params }: { params: Promise<{ categoria:
       <div className="mx-auto max-w-7xl">
         <Link
           href="/"
-          className="btn-brand-font inline-flex items-center gap-2 rounded-full border border-forest-700 bg-forest-900 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-400 hover:bg-forest-800 hover:text-brand-400"
+          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
         >
           ← Volver al inicio
         </Link>

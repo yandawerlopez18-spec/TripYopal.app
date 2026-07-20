@@ -1,9 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useEvents } from "../hooks/useEvents";
 
 const filters = ["Todos", "Hoy", "Próximos", "Fin de semana"];
+
+const gradients = [
+  "linear-gradient(135deg,#f59e0b,#166534)",
+  "linear-gradient(135deg,#0ea5e9,#166534)",
+  "linear-gradient(135deg,#22c55e,#0f2a1d)",
+  "linear-gradient(135deg,#fb7185,#065f46)",
+];
 
 export default function EventosPage() {
   const { events, loading, error } = useEvents();
@@ -15,9 +23,16 @@ export default function EventosPage() {
   }, [events, selectedFilter]);
 
   return (
-    <main className="min-h-screen bg-forest-950 px-6 py-16 text-slate-100 lg:px-8">
+    <main className="min-h-screen bg-forest-950 px-6 py-6 text-slate-100 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
+        <Link
+          href="/"
+          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+        >
+          ← Volver al inicio
+        </Link>
+
+        <div className="mt-6 rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
           <div className="text-center">
             <h1 className="font-[family-name:var(--font-brand)] text-4xl font-bold text-white sm:text-5xl">Eventos en tiempo real</h1>
             <p className="mx-auto mt-3 max-w-2xl text-slate-400">
@@ -45,16 +60,33 @@ export default function EventosPage() {
           {loading && <p className="mt-8 text-slate-400">Cargando eventos...</p>}
           {error && <p className="mt-8 text-red-400">{error}</p>}
           <div className="mt-10 space-y-5">
-            {visibleEvents.map((event) => (
-              <article key={event.id} className="rounded-2xl border border-forest-700 bg-forest-950 p-6 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-xl font-semibold text-slate-100">{event.title}</h2>
-                  <span className="rounded-full bg-brand-500/10 px-3 py-1 text-sm font-medium text-brand-400">
-                    {event.date}
-                  </span>
+            {visibleEvents.map((event, index) => (
+              <article
+                key={event.id}
+                className="flex flex-col overflow-hidden rounded-2xl border border-forest-700 bg-forest-950 shadow-sm sm:flex-row"
+              >
+                {event.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={event.imageUrl} alt={event.title} className="h-44 w-full object-cover sm:h-auto sm:w-56" />
+                ) : (
+                  <div className="h-44 w-full shrink-0 sm:h-auto sm:w-56" style={{ background: gradients[index % gradients.length] }} />
+                )}
+                <div className="flex-1 p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-xl font-semibold text-slate-100">{event.title}</h2>
+                    <span className="rounded-full bg-brand-500/10 px-3 py-1 text-sm font-medium text-brand-400">
+                      {event.date}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-400">{event.place}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-400">{event.description}</p>
+                  <Link
+                    href={`/eventos/${event.id}`}
+                    className="btn-brand-font mt-4 inline-flex items-center gap-2 rounded-full bg-brand-500 px-3 py-1.5 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+                  >
+                    Ver detalles →
+                  </Link>
                 </div>
-                <p className="mt-2 text-sm font-medium text-slate-400">{event.place}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-400">{event.description}</p>
               </article>
             ))}
           </div>
