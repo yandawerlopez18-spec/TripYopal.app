@@ -16,7 +16,6 @@ import {
   GlobeIcon,
   HeadsetIcon,
   HeartIcon,
-  InstagramIcon,
   MailIcon,
   PackageIcon,
   PhoneIcon,
@@ -41,7 +40,6 @@ const GUEST_ASPECTS: { key: keyof ReviewAspects; label: string }[] = [
 
 const COMPACT_FEATURE_KEYS = ["zonaComidas", "parqueaderoAmplio", "cineSalas", "eventosTodoElAno", "wifi", "banosTodoElCentro", "accesibleParaTodos"];
 const SIDEBAR_SERVICE_KEYS = ["wifiGratuito", "parqueaderoGratuito", "banosCentro", "cajerosAutomaticos", "zonaComidas", "seguridad247", "ascensoresEscaleras", "accesoMovilidadReducida"];
-const MALL_CATEGORY_KEYS = ["modaAccesorios", "hogarTecnologia", "bellezaSalud", "supermercadoTienda", "entretenimientoTienda", "bancosServicios"];
 
 const TRUST_BADGES = [
   { icon: CheckIcon, title: "Información verificada", subtitle: "Datos 100% reales" },
@@ -110,6 +108,10 @@ export default function CentroDetailView({
   const { permissions } = useAuth();
   const [heroIndex, setHeroIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [aboutExpanded, setAboutExpanded] = useState(false);
+  const [storesPage, setStoresPage] = useState(1);
+  const [foodCourtPage, setFoodCourtPage] = useState(1);
+  const [venueEventsPage, setVenueEventsPage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [dataVersion, setDataVersion] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -149,11 +151,25 @@ export default function CentroDetailView({
   const amenities = prestador.amenities ?? [];
   const compactFeatures = AMENITY_CATALOG.filter((a) => COMPACT_FEATURE_KEYS.includes(a.key) && amenities.includes(a.key));
   const sidebarServices = AMENITY_CATALOG.filter((a) => SIDEBAR_SERVICE_KEYS.includes(a.key) && amenities.includes(a.key));
-  const mallCategories = AMENITY_CATALOG.filter((a) => MALL_CATEGORY_KEYS.includes(a.key) && amenities.includes(a.key));
 
   const hasImportantInfo = Boolean(
     prestador.schedule || prestador.siteType || prestador.bestTimeToVisit || prestador.averageClimate || prestador.keyServices || prestador.idealFor,
   );
+
+  const STORES_PER_PAGE = 8;
+  const totalStoresPages = Math.max(1, Math.ceil(stores.length / STORES_PER_PAGE));
+  const currentStoresPage = Math.min(storesPage, totalStoresPages);
+  const visibleStores = stores.slice((currentStoresPage - 1) * STORES_PER_PAGE, currentStoresPage * STORES_PER_PAGE);
+
+  const FOOD_COURT_PER_PAGE = 12;
+  const totalFoodCourtPages = Math.max(1, Math.ceil(foodCourt.length / FOOD_COURT_PER_PAGE));
+  const currentFoodCourtPage = Math.min(foodCourtPage, totalFoodCourtPages);
+  const visibleFoodCourt = foodCourt.slice((currentFoodCourtPage - 1) * FOOD_COURT_PER_PAGE, currentFoodCourtPage * FOOD_COURT_PER_PAGE);
+
+  const VENUE_EVENTS_PER_PAGE = 6;
+  const totalVenueEventsPages = Math.max(1, Math.ceil(venueEvents.length / VENUE_EVENTS_PER_PAGE));
+  const currentVenueEventsPage = Math.min(venueEventsPage, totalVenueEventsPages);
+  const visibleVenueEvents = venueEvents.slice((currentVenueEventsPage - 1) * VENUE_EVENTS_PER_PAGE, currentVenueEventsPage * VENUE_EVENTS_PER_PAGE);
 
   const REVIEWS_PER_PAGE = 3;
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
@@ -368,22 +384,16 @@ export default function CentroDetailView({
                 </span>
               </div>
 
-              {prestador.storeCount || compactFeatures.length > 0 ? (
-                <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-                  {prestador.storeCount ? (
-                    <div className="flex flex-col items-center gap-1 rounded-xl border border-forest-700 bg-forest-900 p-3 text-center">
-                      <PackageIcon className="h-5 w-5 text-brand-400" />
-                      <p className="text-[11px] font-medium leading-tight text-slate-200">Más de {prestador.storeCount}</p>
-                      <p className="text-[10px] leading-tight text-slate-500">Tiendas</p>
-                    </div>
-                  ) : null}
-                  {compactFeatures.map((amenity) => (
-                    <div key={amenity.key} className="flex flex-col items-center gap-1 rounded-xl border border-forest-700 bg-forest-900 p-3 text-center">
-                      <span className="text-xl">{amenity.icon}</span>
-                      <p className="text-[11px] font-medium leading-tight text-slate-200">{amenity.label}</p>
-                      {amenity.sublabel ? <p className="text-[10px] leading-tight text-slate-500">{amenity.sublabel}</p> : null}
-                    </div>
-                  ))}
+              {prestador.description ? (
+                <div className="mt-4">
+                  <p className={`text-sm leading-6 text-slate-400 ${aboutExpanded ? "" : "line-clamp-3"}`}>{prestador.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => setAboutExpanded((v) => !v)}
+                    className="mt-1 text-sm font-semibold text-brand-400 hover:underline"
+                  >
+                    {aboutExpanded ? "Leer menos ↑" : "Leer más ↓"}
+                  </button>
                 </div>
               ) : null}
 
@@ -434,47 +444,43 @@ export default function CentroDetailView({
               {shareMessage ? <p className="mt-2 text-sm text-brand-400">{shareMessage}</p> : null}
             </div>
 
-            {/* Tiendas destacadas + En {name} encuentras */}
-            {stores.length > 0 || mallCategories.length > 0 ? (
-              <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                {stores.length > 0 ? (
-                  <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-100">Tiendas destacadas</h2>
-                      <Link href={`/categorias/${categoryKey}`} className="text-sm font-semibold text-brand-400 hover:underline">
-                        Ver todas las tiendas
-                      </Link>
+            {/* Tiendas destacadas */}
+            {stores.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Tiendas destacadas</h2>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {visibleStores.map((store) => (
+                    <div key={store.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
+                      {store.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={store.imageUrl} alt={store.name} className="h-20 w-full object-cover" />
+                      ) : (
+                        <div className="h-20 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                      )}
+                      <div className="p-2.5">
+                        <p className="truncate text-sm font-semibold text-slate-100">{store.name}</p>
+                        {store.badge ? <p className="truncate text-[11px] font-medium text-brand-400">{store.badge}</p> : null}
+                        {store.description ? <p className="mt-0.5 line-clamp-2 text-[11px] leading-tight text-slate-400">{store.description}</p> : null}
+                      </div>
                     </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      {stores.slice(0, 4).map((store) => (
-                        <div key={store.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
-                          {store.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={store.imageUrl} alt={store.name} className="h-20 w-full object-cover" />
-                          ) : (
-                            <div className="h-20 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
-                          )}
-                          <div className="p-2.5">
-                            <p className="truncate text-sm font-semibold text-slate-100">{store.name}</p>
-                            {store.badge ? <p className="truncate text-[11px] font-medium text-brand-400">{store.badge}</p> : null}
-                            {store.description ? <p className="mt-0.5 line-clamp-2 text-[11px] leading-tight text-slate-400">{store.description}</p> : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {mallCategories.length > 0 ? (
-                  <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                    <h2 className="text-lg font-bold text-slate-100">En {prestador.name} encuentras</h2>
-                    <ul className="mt-4 space-y-2.5 text-sm text-slate-300">
-                      {mallCategories.map((cat) => (
-                        <li key={cat.key} className="flex items-center gap-2">
-                          <span className="text-base">{cat.icon}</span> {cat.label}
-                        </li>
-                      ))}
-                    </ul>
+                  ))}
+                </div>
+                {totalStoresPages > 1 ? (
+                  <div className="mt-5 flex items-center justify-center gap-2">
+                    {Array.from({ length: totalStoresPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setStoresPage(page)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+                          currentStoresPage === page
+                            ? "bg-brand-500 text-forest-950"
+                            : "border border-forest-700 text-slate-300 hover:bg-forest-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
                   </div>
                 ) : null}
               </div>
@@ -483,14 +489,9 @@ export default function CentroDetailView({
             {/* Gastronomía */}
             {foodCourt.length > 0 ? (
               <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-100">Gastronomía</h2>
-                  <Link href={`/categorias/${categoryKey}`} className="text-sm font-semibold text-brand-400 hover:underline">
-                    Ver todos los restaurantes
-                  </Link>
-                </div>
+                <h2 className="text-lg font-bold text-slate-100">Gastronomía</h2>
                 <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                  {foodCourt.map((item) => (
+                  {visibleFoodCourt.map((item) => (
                     <div key={item.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
                       {item.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -502,6 +503,104 @@ export default function CentroDetailView({
                         <p className="truncate text-xs font-semibold text-slate-100">{item.name}</p>
                         {item.subtitle ? <p className="truncate text-[10px] text-slate-400">{item.subtitle}</p> : null}
                       </div>
+                    </div>
+                  ))}
+                </div>
+                {totalFoodCourtPages > 1 ? (
+                  <div className="mt-5 flex items-center justify-center gap-2">
+                    {Array.from({ length: totalFoodCourtPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setFoodCourtPage(page)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+                          currentFoodCourtPage === page
+                            ? "bg-brand-500 text-forest-950"
+                            : "border border-forest-700 text-slate-300 hover:bg-forest-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Próximos eventos y actividades */}
+            {venueEvents.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-100">Próximos eventos y actividades</h2>
+                  <Link href="/eventos" className="text-sm font-semibold text-brand-400 hover:underline">
+                    Ver todos
+                  </Link>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-4">
+                  {visibleVenueEvents.map((event) => {
+                    const { day, month } = eventDateParts(event.date);
+                    return (
+                      <div key={event.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
+                        <div className="relative">
+                          {event.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={event.imageUrl} alt={event.title} className="h-36 w-full object-cover" />
+                          ) : (
+                            <div className="h-36 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                          )}
+                          <div className="absolute left-2 top-2 flex h-12 w-12 flex-col items-center justify-center rounded-lg bg-brand-500/90 text-forest-950">
+                            <span className="text-base font-bold leading-none">{day}</span>
+                            <span className="text-[10px] font-semibold leading-none">{month}</span>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <p className="truncate text-base font-semibold text-slate-100">{event.title}</p>
+                          <p className="mt-0.5 text-sm text-slate-400">{event.time ?? ""}</p>
+                          {event.description ? <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-slate-300">{event.description}</p> : null}
+                          <p className="mt-1.5 truncate text-xs text-slate-500">{prestador.name}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {totalVenueEventsPages > 1 ? (
+                  <div className="mt-5 flex items-center justify-center gap-2">
+                    {Array.from({ length: totalVenueEventsPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setVenueEventsPage(page)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+                          currentVenueEventsPage === page
+                            ? "bg-brand-500 text-forest-950"
+                            : "border border-forest-700 text-slate-300 hover:bg-forest-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Servicios */}
+            {prestador.storeCount || compactFeatures.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Servicios</h2>
+                <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                  {prestador.storeCount ? (
+                    <div className="flex flex-col items-center gap-1 rounded-xl border border-forest-700 bg-forest-950 p-3 text-center">
+                      <PackageIcon className="h-5 w-5 text-brand-400" />
+                      <p className="text-[11px] font-medium leading-tight text-slate-200">Más de {prestador.storeCount}</p>
+                      <p className="text-[10px] leading-tight text-slate-500">Tiendas</p>
+                    </div>
+                  ) : null}
+                  {compactFeatures.map((amenity) => (
+                    <div key={amenity.key} className="flex flex-col items-center gap-1 rounded-xl border border-forest-700 bg-forest-950 p-3 text-center">
+                      <span className="text-xl">{amenity.icon}</span>
+                      <p className="text-[11px] font-medium leading-tight text-slate-200">{amenity.label}</p>
+                      {amenity.sublabel ? <p className="text-[10px] leading-tight text-slate-500">{amenity.sublabel}</p> : null}
                     </div>
                   ))}
                 </div>
@@ -649,32 +748,17 @@ export default function CentroDetailView({
               ) : null}
             </div>
 
-            {/* Próximos eventos y actividades */}
-            {venueEvents.length > 0 ? (
-              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-100">Próximos eventos y actividades</h2>
-                  <Link href="/eventos" className="text-sm font-semibold text-brand-400 hover:underline">
-                    Ver todos
-                  </Link>
-                </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {venueEvents.map((event) => {
-                    const { day, month } = eventDateParts(event.date);
-                    return (
-                      <div key={event.id} className="flex items-start gap-3 rounded-xl border border-forest-700 bg-forest-950 p-3">
-                        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-brand-500/15 text-brand-400">
-                          <span className="text-lg font-bold leading-none">{day}</span>
-                          <span className="text-[10px] font-semibold leading-none">{month}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-100">{event.title}</p>
-                          <p className="text-xs text-slate-400">{event.time ?? ""}</p>
-                          {event.description ? <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{event.description}</p> : null}
-                        </div>
-                      </div>
-                    );
-                  })}
+            {/* Políticas */}
+            {prestador.policies && prestador.policies.length > 0 ? (
+              <div id="politicas" className="mt-6 scroll-mt-20 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Políticas</h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {prestador.policies.map((policy) => (
+                    <div key={policy.id} className="rounded-2xl bg-forest-950 p-4">
+                      <p className="text-sm font-semibold text-brand-400">{policy.title}</p>
+                      <p className="mt-1 text-sm text-slate-300">{policy.description}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -711,18 +795,8 @@ export default function CentroDetailView({
                   ) : null}
                 </div>
 
-                {prestador.instagram || prestador.facebook || prestador.tiktok ? (
+                {prestador.facebook || prestador.tiktok ? (
                   <div className="mt-4 flex items-center gap-3">
-                    {prestador.instagram ? (
-                      <a
-                        href={`https://instagram.com/${prestador.instagram.replace("@", "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-forest-700 text-slate-300 transition hover:text-brand-400"
-                      >
-                        <InstagramIcon className="h-4 w-4" />
-                      </a>
-                    ) : null}
                     {prestador.facebook ? (
                       <a
                         href={prestador.facebook.startsWith("http") ? prestador.facebook : `https://facebook.com/${prestador.facebook.replace("@", "")}`}
@@ -763,6 +837,63 @@ export default function CentroDetailView({
 
           {/* Sidebar */}
           <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            {hasImportantInfo ? (
+              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-center text-base font-bold text-slate-100">Información importante</h2>
+                <div className="mt-4 grid grid-cols-1 gap-4 text-sm">
+                  {prestador.schedule ? (
+                    <div className="flex items-start gap-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Horario de atención</span><span className="text-slate-200">{prestador.schedule}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.siteType ? (
+                    <div className="flex items-start gap-3">
+                      <EventPinIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Tipo de lugar</span><span className="text-slate-200">{prestador.siteType}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.bestTimeToVisit ? (
+                    <div className="flex items-start gap-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Mejor momento</span><span className="text-slate-200">{prestador.bestTimeToVisit}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.averageClimate ? (
+                    <div className="flex items-start gap-3">
+                      <ThermometerIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Clima recomendado</span><span className="text-slate-200">{prestador.averageClimate}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.keyServices ? (
+                    <div className="flex items-start gap-3">
+                      <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Servicios destacados</span><span className="text-slate-200">{prestador.keyServices}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.idealFor ? (
+                    <div className="flex items-start gap-3">
+                      <UsersIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Ideal para</span><span className="text-slate-200">{prestador.idealFor}</span></span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {sidebarServices.length > 0 ? (
+              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-base font-bold text-slate-100">Servicios y comodidades</h2>
+                <ul className="mt-3 space-y-2.5 text-sm text-slate-300">
+                  {sidebarServices.map((amenity) => (
+                    <li key={amenity.key} className="flex items-center gap-2">
+                      <CheckIcon className="h-4 w-4 shrink-0 text-brand-400" /> {amenity.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
             {promotions.length > 0 ? (
               <div className="rounded-2xl border border-brand-500/30 bg-forest-900 p-6">
                 <h2 className="text-center text-lg font-bold text-slate-100">Promociones</h2>
@@ -776,22 +907,6 @@ export default function CentroDetailView({
                 </div>
               </div>
             ) : null}
-
-            <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6 text-center">
-              <span className="mx-auto block h-20 w-20 overflow-hidden rounded-full border-2 border-brand-400">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={siteContent.images.mascot} alt="TripYopal IA" className="h-full w-full object-cover" />
-              </span>
-              <h2 className="mt-3 text-base font-bold text-slate-100">TripYopal IA</h2>
-              <p className="mt-1 text-xs text-slate-400">¿Necesitas ayuda para encontrar el centro comercial ideal? Estoy aquí para ayudarte.</p>
-              <button
-                type="button"
-                onClick={openChat}
-                className="btn-brand-font btn-gradient mt-4 w-full rounded-full px-4 py-2.5 text-sm font-semibold text-forest-950 transition"
-              >
-                Hablar con IA
-              </button>
-            </div>
 
             <div id="ubicacion" className="scroll-mt-20 rounded-2xl border border-forest-700 bg-forest-900 p-6">
               <div className="flex items-center justify-between">
@@ -857,63 +972,6 @@ export default function CentroDetailView({
               </div>
             ) : null}
 
-            {hasImportantInfo ? (
-              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <h2 className="text-center text-base font-bold text-slate-100">Información importante</h2>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                  {prestador.schedule ? (
-                    <div className="flex items-start gap-2">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Horario de atención</span><span className="text-slate-200">{prestador.schedule}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.siteType ? (
-                    <div className="flex items-start gap-2">
-                      <EventPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Tipo de lugar</span><span className="text-slate-200">{prestador.siteType}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.bestTimeToVisit ? (
-                    <div className="flex items-start gap-2">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Mejor momento</span><span className="text-slate-200">{prestador.bestTimeToVisit}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.averageClimate ? (
-                    <div className="flex items-start gap-2">
-                      <ThermometerIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Clima recomendado</span><span className="text-slate-200">{prestador.averageClimate}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.keyServices ? (
-                    <div className="col-span-2 flex items-start gap-2">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Servicios destacados</span><span className="text-slate-200">{prestador.keyServices}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.idealFor ? (
-                    <div className="flex items-start gap-2">
-                      <UsersIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Ideal para</span><span className="text-slate-200">{prestador.idealFor}</span></span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-
-            {sidebarServices.length > 0 ? (
-              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <h2 className="text-base font-bold text-slate-100">Servicios y comodidades</h2>
-                <ul className="mt-3 space-y-2.5 text-sm text-slate-300">
-                  {sidebarServices.map((amenity) => (
-                    <li key={amenity.key} className="flex items-center gap-2">
-                      <CheckIcon className="h-4 w-4 shrink-0 text-brand-400" /> {amenity.label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
             {visitTips.length > 0 ? (
               <div className="relative overflow-hidden rounded-2xl border border-forest-700 bg-forest-900 p-6">
                 <h2 className="text-base font-bold text-slate-100">Consejos para tu visita</h2>
@@ -932,6 +990,22 @@ export default function CentroDetailView({
                 />
               </div>
             ) : null}
+
+            <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6 text-center">
+              <span className="mx-auto block h-20 w-20 overflow-hidden rounded-full border-2 border-brand-400">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={siteContent.images.mascot} alt="TripYopal IA" className="h-full w-full object-cover" />
+              </span>
+              <h2 className="mt-3 text-base font-bold text-slate-100">TripYopal IA</h2>
+              <p className="mt-1 text-xs text-slate-400">¿Necesitas ayuda para encontrar el centro comercial ideal? Estoy aquí para ayudarte.</p>
+              <button
+                type="button"
+                onClick={openChat}
+                className="btn-brand-font btn-gradient mt-4 w-full rounded-full px-4 py-2.5 text-sm font-semibold text-forest-950 transition"
+              >
+                Hablar con IA
+              </button>
+            </div>
           </div>
         </div>
       </div>
