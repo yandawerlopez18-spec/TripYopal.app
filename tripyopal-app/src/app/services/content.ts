@@ -1,9 +1,4 @@
-import type { EventItem, Place, RouteItem } from "../types";
-import { loadFromStorage, saveToStorage } from "./persistence";
-
-const PLACES_KEY = "tripyopal_featured_places";
-const EVENTS_KEY = "tripyopal_featured_events";
-const ROUTES_KEY = "tripyopal_featured_routes";
+import type { AgendaItem, Ally, EventFeature, EventItem, Place, RouteItem } from "../types";
 
 const seedPlaces: Place[] = [
   {
@@ -71,71 +66,6 @@ const seedEvents: EventItem[] = [
   },
 ];
 
-export const featuredPlaces: Place[] = loadFromStorage(PLACES_KEY, seedPlaces);
-export const featuredEvents: EventItem[] = loadFromStorage(EVENTS_KEY, seedEvents);
-
-function persistPlaces() {
-  saveToStorage(PLACES_KEY, featuredPlaces);
-}
-
-function persistEvents() {
-  saveToStorage(EVENTS_KEY, featuredEvents);
-}
-
-export function addPlace(place: Omit<Place, "id">) {
-  const newPlace: Place = { ...place, id: crypto.randomUUID() };
-  featuredPlaces.push(newPlace);
-  persistPlaces();
-  return newPlace;
-}
-
-export function updatePlace(id: string, updates: Partial<Omit<Place, "id">>) {
-  const place = featuredPlaces.find((entry) => entry.id === id);
-
-  if (place) {
-    Object.assign(place, updates);
-    persistPlaces();
-  }
-
-  return place;
-}
-
-export function deletePlace(id: string) {
-  const index = featuredPlaces.findIndex((entry) => entry.id === id);
-
-  if (index !== -1) {
-    featuredPlaces.splice(index, 1);
-    persistPlaces();
-  }
-}
-
-export function addEvent(event: Omit<EventItem, "id">) {
-  const newEvent: EventItem = { ...event, id: crypto.randomUUID() };
-  featuredEvents.push(newEvent);
-  persistEvents();
-  return newEvent;
-}
-
-export function updateEvent(id: string, updates: Partial<Omit<EventItem, "id">>) {
-  const event = featuredEvents.find((entry) => entry.id === id);
-
-  if (event) {
-    Object.assign(event, updates);
-    persistEvents();
-  }
-
-  return event;
-}
-
-export function deleteEvent(id: string) {
-  const index = featuredEvents.findIndex((entry) => entry.id === id);
-
-  if (index !== -1) {
-    featuredEvents.splice(index, 1);
-    persistEvents();
-  }
-}
-
 const seedRoutes: RouteItem[] = [
   {
     id: "ruta-centro",
@@ -163,35 +93,182 @@ const seedRoutes: RouteItem[] = [
   },
 ];
 
-export const featuredRoutes: RouteItem[] = loadFromStorage(ROUTES_KEY, seedRoutes);
+/**
+ * These arrays start out as seed data — identical on server and client — so the
+ * first client render matches the server-rendered HTML and hydration never
+ * mismatches. `hydrateContentFromDatabase` replaces their contents with the real
+ * rows from PostgreSQL right after mount (see DataHydrationContext).
+ */
+export const featuredPlaces: Place[] = [...seedPlaces];
+export const featuredEvents: EventItem[] = [...seedEvents];
+export const featuredRoutes: RouteItem[] = [...seedRoutes];
 
-function persistRoutes() {
-  saveToStorage(ROUTES_KEY, featuredRoutes);
+export async function hydrateContentFromDatabase() {
+  try {
+    const [places, events, routes] = await Promise.all([
+      fetch("/api/places").then((res) => res.json()),
+      fetch("/api/events").then((res) => res.json()),
+      fetch("/api/routes").then((res) => res.json()),
+    ]);
+
+    featuredPlaces.length = 0;
+    featuredPlaces.push(...places);
+
+    featuredEvents.length = 0;
+    featuredEvents.push(...events);
+
+    featuredRoutes.length = 0;
+    featuredRoutes.push(...routes);
+  } catch {
+    // Keep the seed data as a fallback if the database is unreachable.
+  }
 }
 
-export function addRoute(route: Omit<RouteItem, "id">) {
-  const newRoute: RouteItem = { ...route, id: crypto.randomUUID() };
+export async function addPlace(place: Omit<Place, "id">) {
+  const response = await fetch("/api/places", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(place),
+  });
+  const newPlace: Place = await response.json();
+  featuredPlaces.push(newPlace);
+  return newPlace;
+}
+
+export async function updatePlace(id: string, updates: Partial<Omit<Place, "id">>) {
+  const response = await fetch(`/api/places/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  const updated: Place = await response.json();
+  const index = featuredPlaces.findIndex((entry) => entry.id === id);
+  if (index !== -1) featuredPlaces[index] = updated;
+  return updated;
+}
+
+export async function deletePlace(id: string) {
+  await fetch(`/api/places/${id}`, { method: "DELETE" });
+  const index = featuredPlaces.findIndex((entry) => entry.id === id);
+  if (index !== -1) featuredPlaces.splice(index, 1);
+}
+
+export async function addEvent(event: Omit<EventItem, "id">) {
+  const response = await fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(event),
+  });
+  const newEvent: EventItem = await response.json();
+  featuredEvents.push(newEvent);
+  return newEvent;
+}
+
+export async function updateEvent(id: string, updates: Partial<Omit<EventItem, "id">>) {
+  const response = await fetch(`/api/events/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  const updated: EventItem = await response.json();
+  const index = featuredEvents.findIndex((entry) => entry.id === id);
+  if (index !== -1) featuredEvents[index] = updated;
+  return updated;
+}
+
+export async function deleteEvent(id: string) {
+  await fetch(`/api/events/${id}`, { method: "DELETE" });
+  const index = featuredEvents.findIndex((entry) => entry.id === id);
+  if (index !== -1) featuredEvents.splice(index, 1);
+}
+
+export async function addEventFeature(eventId: string, feature: Omit<EventFeature, "id">) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event) return undefined;
+
+  const newFeature: EventFeature = { ...feature, id: crypto.randomUUID() };
+  const features = [...(event.features ?? []), newFeature];
+  await updateEvent(eventId, { features });
+  return newFeature;
+}
+
+export async function deleteEventFeature(eventId: string, featureId: string) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event?.features) return;
+
+  const features = event.features.filter((entry) => entry.id !== featureId);
+  await updateEvent(eventId, { features });
+}
+
+export async function addAgendaItem(eventId: string, item: Omit<AgendaItem, "id">) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event) return undefined;
+
+  const newItem: AgendaItem = { ...item, id: crypto.randomUUID() };
+  const agenda = [...(event.agenda ?? []), newItem];
+  await updateEvent(eventId, { agenda });
+  return newItem;
+}
+
+export async function deleteAgendaItem(eventId: string, itemId: string) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event?.agenda) return;
+
+  const agenda = event.agenda.filter((entry) => entry.id !== itemId);
+  await updateEvent(eventId, { agenda });
+}
+
+export async function addAlly(eventId: string, ally: Omit<Ally, "id">) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event) return undefined;
+
+  const newAlly: Ally = { ...ally, id: crypto.randomUUID() };
+  const allies = [...(event.allies ?? []), newAlly];
+  await updateEvent(eventId, { allies });
+  return newAlly;
+}
+
+export async function deleteAlly(eventId: string, allyId: string) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event?.allies) return;
+
+  const allies = event.allies.filter((entry) => entry.id !== allyId);
+  await updateEvent(eventId, { allies });
+}
+
+export async function adjustEventInterest(eventId: string, delta: number) {
+  const event = featuredEvents.find((entry) => entry.id === eventId);
+  if (!event) return undefined;
+
+  const interestedCount = Math.max(0, (event.interestedCount ?? 0) + delta);
+  return updateEvent(eventId, { interestedCount });
+}
+
+export async function addRoute(route: Omit<RouteItem, "id">) {
+  const response = await fetch("/api/routes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(route),
+  });
+  const newRoute: RouteItem = await response.json();
   featuredRoutes.push(newRoute);
-  persistRoutes();
   return newRoute;
 }
 
-export function updateRoute(id: string, updates: Partial<Omit<RouteItem, "id">>) {
-  const route = featuredRoutes.find((entry) => entry.id === id);
-
-  if (route) {
-    Object.assign(route, updates);
-    persistRoutes();
-  }
-
-  return route;
+export async function updateRoute(id: string, updates: Partial<Omit<RouteItem, "id">>) {
+  const response = await fetch(`/api/routes/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  const updated: RouteItem = await response.json();
+  const index = featuredRoutes.findIndex((entry) => entry.id === id);
+  if (index !== -1) featuredRoutes[index] = updated;
+  return updated;
 }
 
-export function deleteRoute(id: string) {
+export async function deleteRoute(id: string) {
+  await fetch(`/api/routes/${id}`, { method: "DELETE" });
   const index = featuredRoutes.findIndex((entry) => entry.id === id);
-
-  if (index !== -1) {
-    featuredRoutes.splice(index, 1);
-    persistRoutes();
-  }
+  if (index !== -1) featuredRoutes.splice(index, 1);
 }

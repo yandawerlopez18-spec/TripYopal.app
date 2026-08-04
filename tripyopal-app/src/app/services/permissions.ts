@@ -1,7 +1,5 @@
 import type { AdminScope, AppUser, Role, UserPermission } from "../types/roles";
-import { loadFromStorage, saveToStorage } from "./persistence";
-
-const USERS_KEY = "tripyopal_users";
+import { listPrestadores } from "./prestadores";
 
 export const ROLE_CAPABILITIES: Record<Exclude<Role, "admin">, string[]> = {
   turista: [
@@ -88,14 +86,14 @@ const seedUsers: AppUser[] = [
     id: "super-1",
     name: "Administrador principal",
     email: "admin@tripyopal.com",
-    password: "admin123",
+    password: "",
     role: "superadmin",
   },
   {
     id: "admin-hotel-la-sabana",
     name: "Dueño de Hotel La Sabana",
     email: "dueno@sitex.com",
-    password: "site123",
+    password: "",
     role: "admin",
     scope: {
       resourceType: "prestador",
@@ -108,43 +106,57 @@ const seedUsers: AppUser[] = [
     id: "turista-1",
     name: "Visitante",
     email: "visitante@example.com",
-    password: "visit123",
+    password: "",
     role: "turista",
   },
 ];
 
-const demoUsers: AppUser[] = loadFromStorage(USERS_KEY, seedUsers);
+/**
+ * Starts as seed data (identical on server and client, password stripped since it's
+ * never needed for display) so the first client render matches the server-rendered
+ * HTML and hydration never mismatches. `hydrateUsersFromDatabase` replaces its
+ * contents with the real rows from PostgreSQL (also without passwords) right after
+ * mount (see DataHydrationContext). Login/session verification never goes through
+ * this cache — it's handled server-side by /api/auth/*.
+ */
+const demoUsers: AppUser[] = [...seedUsers];
 
-function persistUsers() {
-  saveToStorage(USERS_KEY, demoUsers);
+export async function hydrateUsersFromDatabase() {
+  try {
+    const response = await fetch("/api/users");
+    const data: AppUser[] = await response.json();
+    demoUsers.length = 0;
+    demoUsers.push(...data);
+  } catch {
+    // Keep the seed data as a fallback if the database is unreachable.
+  }
 }
 
-function resolvePermission(user: AppUser): UserPermission {
+/** Used server-side (by /api/auth/login and /api/auth/session) to shape a User row into a UserPermission. */
+export function resolvePermission(user: { role: string; scope?: unknown }): UserPermission {
   if (user.role === "admin" && user.scope) {
-    return { role: user.role, capabilities: user.scope.capabilities, scope: user.scope };
+    const scope = user.scope as AdminScope;
+    return { role: "admin", capabilities: scope.capabilities, scope };
   }
 
-  return { role: user.role, capabilities: ROLE_CAPABILITIES[user.role as Exclude<Role, "admin">] ?? [] };
+  return { role: user.role as Role, capabilities: ROLE_CAPABILITIES[user.role as Exclude<Role, "admin">] ?? [] };
 }
 
-export function getPermissionsForUser(email: string, password: string): UserPermission | null {
-  const user = demoUsers.find((entry) => entry.email === email && entry.password === password);
-
-  if (!user) {
-    return null;
-  }
-
-  return resolvePermission(user);
+export async function createDemoUser(user: AppUser) {
+  const response = await fetch("/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
+  });
+  const created: AppUser = await response.json();
+  demoUsers.push(created);
+  return created;
 }
 
-export function createDemoUser(user: AppUser) {
-  demoUsers.push(user);
-  persistUsers();
-  return user;
-}
-
-export function findUserByEmail(email: string) {
-  return demoUsers.find((entry) => entry.email === email);
+export async function findUserByEmail(email: string) {
+  const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+  const user: AppUser | null = await response.json();
+  return user ?? undefined;
 }
 
 export function listUsers() {
@@ -155,27 +167,50 @@ export function listAdmins() {
   return demoUsers.filter((entry) => entry.role === "admin" && entry.scope);
 }
 
-export function updateUser(id: string, updates: Partial<Omit<AppUser, "id">>) {
-  const user = demoUsers.find((entry) => entry.id === id);
+export function getAdminCategoryKey(user: AppUser): string | null {
+  if (user.role !== "admin" || !user.scope) return null;
 
-  if (user) {
-    Object.assign(user, updates);
-    persistUsers();
+  if (user.scope.resourceType === "prestador") {
+    const prestador = listPrestadores().find((entry) => entry.id === user.scope!.resourceId);
+    return prestador?.category ?? null;
   }
 
+  return user.scope.resourceType;
+}
+
+export async function updateUser(id: string, updates: Partial<Omit<AppUser, "id">>) {
+  const response = await fetch(`/api/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  const updated: AppUser = await response.json();
+  const user = demoUsers.find((entry) => entry.id === id);
+  if (user) Object.assign(user, updated);
   return user;
 }
 
-export function deleteUser(id: string) {
-  const index = demoUsers.findIndex((entry) => entry.id === id);
+/** Superadmin-only: fetches a user's real password from the database (never included in listUsers/listAdmins). */
+export async function getUserPassword(id: string): Promise<string> {
+  const token = typeof window !== "undefined" ? window.localStorage.getItem("tripyopal_session_token") : null;
+  if (!token) return "";
 
-  if (index !== -1) {
-    demoUsers.splice(index, 1);
-    persistUsers();
-  }
+  const response = await fetch(`/api/users/${id}/password`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) return "";
+  const data = await response.json();
+  return data.password ?? "";
 }
 
-export function createScopedAdmin(input: {
+export async function deleteUser(id: string) {
+  await fetch(`/api/users/${id}`, { method: "DELETE" });
+  const index = demoUsers.findIndex((entry) => entry.id === id);
+  if (index !== -1) demoUsers.splice(index, 1);
+}
+
+export async function createScopedAdmin(input: {
   name: string;
   email: string;
   password: string;

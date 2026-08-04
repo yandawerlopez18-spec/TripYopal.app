@@ -18,9 +18,9 @@ type SiteListManagerProps<T extends { id: string }> = {
   items: T[];
   fields: ListFieldConfig<T>[];
   summary: (item: T) => { primary: string; secondary?: string };
-  onAdd: (values: Record<string, string>) => void;
-  onUpdate: (id: string, values: Record<string, string>) => void;
-  onDelete: (id: string) => void;
+  onAdd: (values: Record<string, string>) => void | Promise<unknown>;
+  onUpdate: (id: string, values: Record<string, string>) => void | Promise<unknown>;
+  onDelete: (id: string) => void | Promise<unknown>;
 };
 
 function emptyValues<T extends { id: string }>(fields: ListFieldConfig<T>[]): Record<string, string> {
@@ -53,30 +53,30 @@ export default function SiteListManager<T extends { id: string }>({
     setMessage("");
   };
 
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
     const missing = fields.find((field) => field.required && !editForm[field.key]);
     if (missing) {
       setMessage(`Completa el campo "${missing.label}".`);
       return;
     }
 
-    onUpdate(id, editForm);
+    await onUpdate(id, editForm);
     setEditingId(null);
     setMessage("");
     refresh();
   };
 
-  const handleDelete = (item: T) => {
+  const handleDelete = async (item: T) => {
     const { primary } = summary(item);
     if (!window.confirm(`¿Eliminar "${primary}"? Esta acción no se puede deshacer.`)) {
       return;
     }
 
-    onDelete(item.id);
+    await onDelete(item.id);
     refresh();
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const missing = fields.find((field) => field.required && !addForm[field.key]);
@@ -85,7 +85,7 @@ export default function SiteListManager<T extends { id: string }>({
       return;
     }
 
-    onAdd(addForm);
+    await onAdd(addForm);
     setAddForm(emptyValues(fields));
     setShowAddForm(false);
     setMessage("Registro agregado correctamente.");
@@ -104,7 +104,7 @@ export default function SiteListManager<T extends { id: string }>({
             setShowAddForm((value) => !value);
             setMessage("");
           }}
-          className="btn-brand-font rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+          className="btn-brand-font btn-gradient rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
         >
           {showAddForm ? "Cancelar" : addButtonLabel}
         </button>
@@ -138,7 +138,7 @@ export default function SiteListManager<T extends { id: string }>({
                     ),
                   )}
                   <div className="flex gap-2 sm:col-span-2">
-                    <button type="button" onClick={() => saveEdit(item.id)} className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950">
+                    <button type="button" onClick={() => saveEdit(item.id)} className="btn-gradient rounded-full px-3 py-1.5 text-xs font-semibold text-forest-950">
                       Guardar
                     </button>
                     <button type="button" onClick={() => setEditingId(null)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300">
@@ -153,7 +153,7 @@ export default function SiteListManager<T extends { id: string }>({
                     {summary(item).secondary ? <p className="truncate text-xs text-slate-400">{summary(item).secondary}</p> : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <button type="button" onClick={() => startEdit(item)} className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
+                    <button type="button" onClick={() => startEdit(item)} className="btn-brand-font btn-gradient rounded-full px-3 py-1.5 text-xs font-semibold text-forest-950 transition">
                       Editar
                     </button>
                     <button type="button" onClick={() => handleDelete(item)} className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
@@ -188,7 +188,7 @@ export default function SiteListManager<T extends { id: string }>({
               />
             ),
           )}
-          <button className="rounded-full bg-brand-500 px-4 py-3 text-sm font-semibold text-forest-950 transition hover:bg-brand-400 sm:col-span-2">
+          <button className="btn-gradient rounded-full px-4 py-3 text-sm font-semibold text-forest-950 transition sm:col-span-2">
             {addButtonLabel}
           </button>
         </form>

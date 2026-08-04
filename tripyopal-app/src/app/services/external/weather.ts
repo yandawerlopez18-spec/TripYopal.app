@@ -1,6 +1,6 @@
 import type { WeatherResponse } from "../../api/weather/route";
 
-export type { WeatherResponse, DailyForecast } from "../../api/weather/route";
+export type { WeatherResponse, DailyForecast, HourlyForecast } from "../../api/weather/route";
 
 const fallbackWeather: WeatherResponse = {
   city: "Yopal",
@@ -13,11 +13,21 @@ const fallbackWeather: WeatherResponse = {
   recommended: "Ideal para recorrer la ciudad",
   humidity: 65,
   wind: 12,
+  windDeg: 90,
+  windGust: 20,
   pressure: 1011,
+  visibility: 10,
+  uvIndex: 7,
+  dewPoint: 21,
+  precipitation: 0.2,
+  rainChance: 20,
   sunrise: "05:50 a. m.",
   sunset: "06:05 p. m.",
+  moonrise: "06:07 p. m.",
+  moonset: "05:44 a. m.",
   updatedAt: new Date().toISOString(),
   isLive: false,
+  hourly: [],
   forecast: [],
 };
 

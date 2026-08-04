@@ -15,7 +15,7 @@ Plataforma web turística para Yopal, Casanare, orientada a impulsar el turismo 
 ## 4. Stack técnico confirmado
 - Frontend: React / Next.js + Tailwind CSS
 - Backend: Firebase Cloud Functions
-- Base de datos: Firestore
+- Base de datos: PostgreSQL (reemplaza el plan original de Firestore). Desarrollo local contra un PostgreSQL en el PC, administrado con pgAdmin4; para producción se necesitará un PostgreSQL alojado en la nube (ej. Supabase, Neon, Railway, RDS).
 - Almacenamiento: Firebase Storage
 - Auth: Firebase Auth con email y contraseña únicamente
 - Mapas: Google Maps API

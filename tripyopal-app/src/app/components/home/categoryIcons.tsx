@@ -1,3 +1,5 @@
+import { siteContent } from "../../services/siteContent";
+
 export type IconKey =
   | "hoteles"
   | "restaurantes"
@@ -8,11 +10,13 @@ export type IconKey =
   | "eventos"
   | "rapidas"
   | "parrillas"
-  | "tipica"
+  | "discotecas"
   | "rutas"
   | "clima"
   | "transporte"
-  | "domicilios";
+  | "domicilios"
+  | "educacion"
+  | "comercios";
 
 export const BUSINESS_CATEGORIES: { key: IconKey; label: string }[] = [
   { key: "hoteles", label: "Hoteles" },
@@ -23,10 +27,38 @@ export const BUSINESS_CATEGORIES: { key: IconKey; label: string }[] = [
   { key: "centros", label: "Centros comerciales" },
   { key: "rapidas", label: "Comidas rápidas" },
   { key: "parrillas", label: "Parrillas y asaderos" },
-  { key: "tipica", label: "Comida típica llanera" },
+  { key: "discotecas", label: "Discotecas" },
   { key: "transporte", label: "Transporte" },
   { key: "domicilios", label: "Domicilios" },
+  { key: "educacion", label: "Educación" },
+  { key: "comercios", label: "Comercios" },
 ];
+
+/** Lets a superadmin rename a category's display label without touching its key/icon/route. */
+export function getCategoryLabel(key: IconKey, fallback: string): string {
+  return siteContent.sections.categoryLabels?.[key] ?? fallback;
+}
+
+export const UNIFIED_BADGE_CLASS = "bg-forest-950/85 text-white border border-brand-500/60 backdrop-blur";
+
+export const CATEGORY_BADGE_STYLES: Record<IconKey, string> = {
+  hoteles: UNIFIED_BADGE_CLASS,
+  restaurantes: UNIFIED_BADGE_CLASS,
+  bares: UNIFIED_BADGE_CLASS,
+  sitios: UNIFIED_BADGE_CLASS,
+  parques: UNIFIED_BADGE_CLASS,
+  centros: UNIFIED_BADGE_CLASS,
+  eventos: UNIFIED_BADGE_CLASS,
+  rapidas: UNIFIED_BADGE_CLASS,
+  parrillas: UNIFIED_BADGE_CLASS,
+  discotecas: UNIFIED_BADGE_CLASS,
+  rutas: UNIFIED_BADGE_CLASS,
+  clima: UNIFIED_BADGE_CLASS,
+  transporte: UNIFIED_BADGE_CLASS,
+  domicilios: UNIFIED_BADGE_CLASS,
+  educacion: UNIFIED_BADGE_CLASS,
+  comercios: UNIFIED_BADGE_CLASS,
+};
 
 export function CategoryIcon({ icon }: { icon: IconKey }) {
   const common = {
@@ -120,13 +152,12 @@ export function CategoryIcon({ icon }: { icon: IconKey }) {
           <path d="M24 28v10M17 38h14" />
         </svg>
       );
-    case "tipica":
+    case "discotecas":
       return (
         <svg {...common}>
-          <ellipse cx="24" cy="31" rx="19" ry="4" />
-          <path d="M13 30.5a11 8.5 0 0 1 22 0" />
-          <circle cx="24" cy="24" r="2.2" />
-          <path d="M20 23.3a4.4 4.4 0 0 1 8 0" />
+          <path d="M24 6v6" />
+          <circle cx="24" cy="24" r="12" />
+          <path d="M12 24h24M24 12v24M15.5 15.5l17 17M32.5 15.5l-17 17" />
         </svg>
       );
     case "rutas":
@@ -161,6 +192,23 @@ export function CategoryIcon({ icon }: { icon: IconKey }) {
           <circle cx="34" cy="34" r="5" />
           <path d="M12 34h9l5-12h9l5 8M26 22h6" />
           <rect x="30" y="10" width="9" height="9" rx="1.5" />
+        </svg>
+      );
+    case "educacion":
+      return (
+        <svg {...common}>
+          <path d="M4 17 24 9l20 8-20 8Z" strokeLinejoin="round" />
+          <path d="M13 20.5v8c0 2.5 5 4.5 11 4.5s11-2 11-4.5v-8" />
+          <path d="M38 18v12" />
+        </svg>
+      );
+    case "comercios":
+      return (
+        <svg {...common}>
+          <path d="M8 12h32l2 8H6Z" strokeLinejoin="round" />
+          <path d="M8 20v16h32V20" />
+          <path d="M19 36V26h10v10" />
+          <path d="M8 20a5 5 0 0 0 10 0M18 20a5 5 0 0 0 10 0M28 20a5 5 0 0 0 10 0" />
         </svg>
       );
   }

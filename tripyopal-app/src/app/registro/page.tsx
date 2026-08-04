@@ -33,6 +33,7 @@ export default function RegistroPage() {
     city: "",
     phone: "",
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [status, setStatus] = useState("Crea tu cuenta para guardar preferencias y rutas.");
 
   const isColombia = form.country === "Colombia";
@@ -50,7 +51,7 @@ export default function RegistroPage() {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, phone: formatPhone(e.target.value) });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const required = [
@@ -76,12 +77,17 @@ export default function RegistroPage() {
       return;
     }
 
-    if (findUserByEmail(form.email)) {
+    if (await findUserByEmail(form.email)) {
       setStatus("Ya existe una cuenta registrada con este correo. Inicia sesión en su lugar.");
       return;
     }
 
-    createDemoUser({
+    if (!acceptedTerms) {
+      setStatus("Debes aceptar los términos y condiciones y la política de datos para continuar.");
+      return;
+    }
+
+    await createDemoUser({
       id: crypto.randomUUID(),
       name: form.nombre,
       lastName: form.apellido,
@@ -97,14 +103,22 @@ export default function RegistroPage() {
       phone: form.phone,
     });
 
-    login(form.email, form.password);
+    await login(form.email, form.password);
     setStatus(`Cuenta creada, ¡bienvenido ${form.nombre}! Ya iniciaste sesión como turista.`);
     router.push("/");
   };
 
   return (
     <main className="min-h-screen bg-forest-950 px-6 py-16 text-slate-100 lg:px-8">
-      <div className="mx-auto w-full max-w-2xl rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
+      <div className="mx-auto w-full max-w-2xl">
+        <Link
+          href="/"
+          className="btn-brand-font btn-gradient inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
+        >
+          ← Volver al inicio
+        </Link>
+
+        <div className="mt-6 rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
         <h1 className="text-center font-[family-name:var(--font-brand)] text-3xl font-bold text-white">Crear cuenta</h1>
         <p className="mt-2 text-center text-sm text-slate-400">
           El registro público es para turistas. Explora lugares, guarda favoritos y recibe recomendaciones personalizadas.
@@ -204,7 +218,30 @@ export default function RegistroPage() {
             <input className={inputClass} value={form.phone} onChange={handlePhoneChange} placeholder="300 000 0000" inputMode="numeric" />
           </div>
 
-          <button className="rounded-full bg-brand-500 px-4 py-3 font-semibold text-forest-950 transition hover:bg-brand-400 sm:col-span-2">
+          <label className="flex items-start gap-2.5 text-sm text-slate-300 sm:col-span-2">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-forest-700 bg-forest-950 accent-brand-500"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+            />
+            <span>
+              He leído y acepto los{" "}
+              <Link href="/terminos" target="_blank" className="font-semibold text-brand-400 hover:text-brand-300">
+                términos y condiciones
+              </Link>{" "}
+              y la{" "}
+              <Link href="/terminos#datos" target="_blank" className="font-semibold text-brand-400 hover:text-brand-300">
+                política de datos
+              </Link>{" "}
+              de TripYopal.
+            </span>
+          </label>
+
+          <button
+            disabled={!acceptedTerms}
+            className="btn-gradient rounded-full px-4 py-3 font-semibold text-forest-950 transition disabled:cursor-not-allowed disabled:opacity-40 sm:col-span-2"
+          >
             Registrarme
           </button>
         </form>
@@ -213,6 +250,7 @@ export default function RegistroPage() {
         <p className="mt-4 text-sm text-slate-400">
           ¿Ya tienes cuenta? <Link href="/login" className="font-semibold text-brand-400 hover:text-brand-300">Inicia sesión</Link>
         </p>
+        </div>
       </div>
     </main>
   );

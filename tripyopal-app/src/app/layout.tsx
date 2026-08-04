@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Baloo_2, Geist, Geist_Mono, Yellowtail } from "next/font/google";
 import FloatingChatWidget from "./components/assistant/FloatingChatWidget";
 import Navbar from "./components/Navbar";
+import SiteFooter from "./components/SiteFooter";
 import { AuthProvider } from "./context/AuthContext";
+import { BusinessAssistantProvider } from "./context/BusinessAssistantContext";
+import { DataHydrationProvider } from "./context/DataHydrationContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,9 +47,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
         <AuthProvider>
-          <Navbar />
-          <main>{children}</main>
-          <FloatingChatWidget />
+          <BusinessAssistantProvider>
+            <DataHydrationProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <SiteFooter />
+              <FloatingChatWidget />
+            </DataHydrationProvider>
+          </BusinessAssistantProvider>
         </AuthProvider>
       </body>
     </html>

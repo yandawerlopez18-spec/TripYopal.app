@@ -7,7 +7,7 @@ export default function ChatPage() {
       <div className="mx-auto max-w-5xl">
         <Link
           href="/"
-          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+          className="btn-brand-font btn-gradient inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
         >
           ← Volver al inicio
         </Link>

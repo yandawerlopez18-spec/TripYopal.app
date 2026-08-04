@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id
+  name       String
+  lastName   String?
+  username   String?
+  email      String   @unique
+  password   String
+  role       String
+  businessType String?
+  scope      Json?
+  birthDate  String?
+  gender     String?
+  country    String?
+  department String?
+  city       String?
+  phone      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sessions   Session[]
+}
+
+/// Opaque login session tokens. Session restore on reload looks up by token
+/// (never by email alone), so a stored client-side value can't be used to
+/// impersonate an arbitrary account without having logged in first.
+model Session {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Prestador {
+  id             String   @id
+  name           String
+  tipo           String
+  category       String
+  description    String?
+  address        String?
+  phone          String?
+  instagram      String?
+  schedule       String?
+  priceRange     String?
+  imageUrl       String?
+  logoUrl        String?
+  items          Json?
+  gallery        Json?
+  stars          Float?
+  status         String?
+  badges         Json?
+  neighborhood   String?
+  coordinates    String?
+  checkIn        String?
+  checkOut       String?
+  responseTime   String?
+  languages      String?
+  paymentMethods String?
+  website        String?
+  whatsapp       String?
+  email          String?
+  facebook       String?
+  tiktok         String?
+  amenities      Json?
+  security       Json?
+  policies       Json?
+  blockedDates   Json?
+  faq            Json?
+  promotions     Json?
+  nearbyPlaces   Json?
+  media          Json?
+  reviews        Json?
+  highlights     Json?
+  weeklyHours    Json?
+  venueEvents    Json?
+  foodCourt      Json?
+  menuCategories Json?
+  allies         Json?
+  cuisineType    String?
+  ambiance       String?
+  dietaryOptions String?
+  musicGenre     String?
+  dressCode      String?
+  siteType             String?
+  bestTimeToVisit      String?
+  averageClimate       String?
+  visitRecommendations String?
+  difficultyLevel      String?
+  entryFee             String?
+  visitTips            Json?
+  whatToFind           Json?
+  parkArea       String?
+  foundingYear   String?
+  parkType       String?
+  managedBy      String?
+  safetyNote     String?
+  idealFor       String?
+  storeCount     String?
+  keyServices    String?
+  deliveryTime   String?
+  minOrder       String?
+  deliveryFee    String?
+  orderTracking  String?
+  twitter        String?
+  flights        Json?
+  transportOptions Json?
+  news           Json?
+  videoUrl       String?
+  tourUrl        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Place {
+  id          String   @id
+  name        String
+  category    String
+  description String
+  price       String
+  rating      Float?
+  location    String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id               String   @id
+  title            String
+  date             String
+  place            String
+  description      String
+  imageUrl         String?
+  time             String?
+  modality         String?
+  category         String?
+  longDescription  String?
+  endTime          String?
+  address          String?
+  organizer        String?
+  contactPhone     String?
+  contactEmail     String?
+  featured         Boolean?
+  interestedCount  Int?
+  features         Json?
+  agenda           Json?
+  allies           Json?
+  whyAttend        Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Route {
+  id          String   @id
+  name        String
+  duration    String
+  description String
+  budget      String
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SafetyPoint {
+  id      String  @id
+  type    String
+  name    String
+  address String?
+  phone   String?
+}
+
+model EmergencyContact {
+  id      String  @id
+  type    String
+  name    String
+  address String?
+  phone   String?
+}
+
+model Tip {
+  id       String @id
+  category String
+  text     String
+}
+
+model ClimateTip {
+  id          String @id
+  season      String
+  description String
+}
+
+/// Singleton row (id always "singleton") holding the editable home-page copy.
+model SiteContent {
+  id      String @id @default("singleton")
+  offer   Json
+  cta     Json
+  contact Json
+  hero    Json   @default("{\"badge\":\"Naturaleza, cultura y aventura en los Llanos Orientales\",\"title\":\"Vive lo mejor de Yopal-Casanare\",\"subtitle\":\"Naturaleza, cultura y aventura en el corazón de los Llanos Orientales. Explora, vive y conecta.\",\"backgroundImage\":\"/fondo-casanare.jpg\",\"videoUrl\":\"\"}")
+  images  Json   @default("{\"weatherIllustration\":\"/clima.png\",\"recommendationsIllustration\":\"/recomendaciones.png\",\"mascot\":\"/circulo.png\",\"chatWidget\":\"/chat.png\"}")
+  social  Json   @default("{\"facebook\":\"\",\"instagram\":\"\",\"gmail\":\"\",\"x\":\"\",\"whatsapp\":\"\"}")
+  /// Freeform per-section text overrides, keyed by section id, so new sections never need a migration.
+  sections Json  @default("{}")
+}

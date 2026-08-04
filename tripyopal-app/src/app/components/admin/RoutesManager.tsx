@@ -30,34 +30,34 @@ export default function RoutesManager() {
     });
   };
 
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
     if (!editForm.name || !editForm.duration || !editForm.budget || !editForm.description) {
       setMessage("Completa nombre, duración, presupuesto y descripción.");
       return;
     }
 
-    updateRoute(id, {
+    await updateRoute(id, {
       name: editForm.name,
       duration: editForm.duration,
       budget: editForm.budget,
       description: editForm.description,
-      imageUrl: editForm.imageUrl || undefined,
+      imageUrl: editForm.imageUrl,
     });
     setEditingId(null);
     setMessage("");
     refresh();
   };
 
-  const handleDelete = (route: RouteItem) => {
+  const handleDelete = async (route: RouteItem) => {
     if (!window.confirm(`¿Eliminar "${route.name}"? Esta acción no se puede deshacer.`)) {
       return;
     }
 
-    deleteRoute(route.id);
+    await deleteRoute(route.id);
     refresh();
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!addForm.name || !addForm.duration || !addForm.budget || !addForm.description) {
@@ -65,7 +65,7 @@ export default function RoutesManager() {
       return;
     }
 
-    addRoute({
+    await addRoute({
       name: addForm.name,
       duration: addForm.duration,
       budget: addForm.budget,
@@ -88,7 +88,7 @@ export default function RoutesManager() {
         <button
           type="button"
           onClick={() => setShowAddForm((value) => !value)}
-          className="btn-brand-font rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+          className="btn-brand-font btn-gradient rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
         >
           {showAddForm ? "Cancelar" : "Agregar ruta"}
         </button>
@@ -105,7 +105,7 @@ export default function RoutesManager() {
                 <ImageUploadField className="sm:col-span-2" compact value={editForm.imageUrl} onChange={(value) => setEditForm({ ...editForm, imageUrl: value })} />
                 <textarea className={`${inputClass} sm:col-span-2`} placeholder="Descripción" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
                 <div className="flex gap-2 sm:col-span-2">
-                  <button type="button" onClick={() => saveEdit(route.id)} className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950">
+                  <button type="button" onClick={() => saveEdit(route.id)} className="btn-gradient rounded-full px-3 py-1.5 text-xs font-semibold text-forest-950">
                     Guardar
                   </button>
                   <button type="button" onClick={() => setEditingId(null)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300">
@@ -128,7 +128,7 @@ export default function RoutesManager() {
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button type="button" onClick={() => startEdit(route)} className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400">
+                  <button type="button" onClick={() => startEdit(route)} className="btn-brand-font btn-gradient rounded-full px-3 py-1.5 text-xs font-semibold text-forest-950 transition">
                     Editar
                   </button>
                   <button type="button" onClick={() => handleDelete(route)} className="rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
@@ -148,7 +148,7 @@ export default function RoutesManager() {
           <input className={inputClass} placeholder="Presupuesto (Bajo/Medio/Alto)" value={addForm.budget} onChange={(e) => setAddForm({ ...addForm, budget: e.target.value })} />
           <ImageUploadField className="sm:col-span-2" value={addForm.imageUrl} onChange={(value) => setAddForm({ ...addForm, imageUrl: value })} />
           <textarea className={`${inputClass} sm:col-span-2`} placeholder="Descripción" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })} />
-          <button className="rounded-full bg-brand-500 px-4 py-3 text-sm font-semibold text-forest-950 transition hover:bg-brand-400 sm:col-span-2">
+          <button className="btn-gradient rounded-full px-4 py-3 text-sm font-semibold text-forest-950 transition sm:col-span-2">
             Agregar ruta
           </button>
         </form>

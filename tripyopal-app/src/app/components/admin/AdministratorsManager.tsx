@@ -1,35 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { RESOURCE_CAPABILITY_PRESETS, deleteUser, listAdmins, updateUser } from "../../services/permissions";
+import { RESOURCE_CAPABILITY_PRESETS, deleteUser, getAdminCategoryKey, getUserPassword, listAdmins, updateUser } from "../../services/permissions";
 import type { AppUser } from "../../types/roles";
-
-const resourceTypeLabels: Record<string, string> = {
-  prestador: "Negocio",
-  lugar: "Lugar turístico",
-  evento: "Evento",
-  ruta: "Ruta",
-};
+import { adminCategoryLabels, adminCategoryOptions } from "../../utils/adminCategories";
 
 const inputClass = "rounded-2xl border border-forest-700 bg-forest-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-400 focus:outline-none";
+
+const categoryFilters = [{ value: "todas", label: "Todas las categorías" }, ...adminCategoryOptions];
 
 export default function AdministratorsManager() {
   const { email: currentEmail } = useAuth();
   const [, setRefreshKey] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "" });
+  const [editForm, setEditForm] = useState({ name: "", email: "", password: "" });
   const [capabilities, setCapabilities] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("todas");
+  const editingIdRef = useRef<string | null>(null);
 
   const admins = listAdmins();
+  const filteredAdmins = categoryFilter === "todas" ? admins : admins.filter((admin) => getAdminCategoryKey(admin) === categoryFilter);
   const refresh = () => setRefreshKey((key) => key + 1);
 
-  const startEdit = (admin: AppUser) => {
+  const startEdit = async (admin: AppUser) => {
+    editingIdRef.current = admin.id;
     setEditingId(admin.id);
-    setEditForm({ name: admin.name, email: admin.email });
+    setEditForm({ name: admin.name, email: admin.email, password: "" });
     setCapabilities(admin.scope?.capabilities ?? []);
+    setShowPassword(false);
     setMessage("");
+
+    const password = await getUserPassword(admin.id);
+    if (editingIdRef.current === admin.id) {
+      setEditForm((form) => ({ ...form, password }));
+    }
   };
 
   const toggleCapability = (capability: string) => {
@@ -38,15 +45,16 @@ export default function AdministratorsManager() {
     );
   };
 
-  const saveEdit = (admin: AppUser) => {
-    if (!editForm.name || !editForm.email || !admin.scope) {
-      setMessage("Completa nombre y correo.");
+  const saveEdit = async (admin: AppUser) => {
+    if (!editForm.name || !editForm.email || !editForm.password || !admin.scope) {
+      setMessage("Completa nombre, correo y contraseña.");
       return;
     }
 
-    updateUser(admin.id, {
+    await updateUser(admin.id, {
       name: editForm.name,
       email: editForm.email,
+      password: editForm.password,
       scope: { ...admin.scope, capabilities },
     });
 
@@ -55,7 +63,7 @@ export default function AdministratorsManager() {
     refresh();
   };
 
-  const handleDelete = (admin: AppUser) => {
+  const handleDelete = async (admin: AppUser) => {
     if (admin.email === currentEmail) {
       setMessage("No puedes eliminar tu propia cuenta mientras tienes la sesión iniciada.");
       return;
@@ -65,24 +73,41 @@ export default function AdministratorsManager() {
       return;
     }
 
-    deleteUser(admin.id);
+    await deleteUser(admin.id);
     refresh();
   };
 
   return (
     <div className="rounded-2xl border border-forest-700 bg-forest-950 p-5">
       <h3 className="font-semibold text-slate-100">
-        Administradores <span className="text-slate-400">({admins.length})</span>
+        Administradores <span className="text-slate-400">({filteredAdmins.length} de {admins.length})</span>
       </h3>
       <p className="mt-1 text-sm text-slate-400">
         Cuentas de administrador limitadas a un negocio, lugar, evento o ruta específico.
       </p>
 
-      {admins.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">Aún no se han creado administradores.</p>
+      <label className="mt-4 block text-sm font-medium text-slate-300">
+        Filtrar por categoría
+        <select
+          className={`${inputClass} mt-2 w-full max-w-sm`}
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          {categoryFilters.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {filteredAdmins.length === 0 ? (
+        <p className="mt-4 text-sm text-slate-500">
+          {admins.length === 0 ? "Aún no se han creado administradores." : "Ningún administrador coincide con esta categoría."}
+        </p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {admins.map((admin) => {
+          {filteredAdmins.map((admin) => {
             const isSelf = admin.email === currentEmail;
             const resourceCapabilities = admin.scope ? RESOURCE_CAPABILITY_PRESETS[admin.scope.resourceType] : [];
 
@@ -101,6 +126,25 @@ export default function AdministratorsManager() {
                       value={editForm.email}
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     />
+                    <div className="flex items-center gap-2 sm:col-span-2">
+                      <input
+                        className={`${inputClass} flex-1`}
+                        placeholder="Contraseña"
+                        type={showPassword ? "text" : "password"}
+                        spellCheck={false}
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        value={editForm.password}
+                        onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((current) => !current)}
+                        className="shrink-0 rounded-full border border-forest-700 px-3 py-2 text-xs text-slate-300 transition hover:bg-forest-800"
+                      >
+                        {showPassword ? "Ocultar" : "Ver"}
+                      </button>
+                    </div>
                     <div className="sm:col-span-2">
                       <p className="mb-2 text-xs font-medium text-slate-300">
                         Capacidades sobre &quot;{admin.scope?.resourceName}&quot;
@@ -115,7 +159,7 @@ export default function AdministratorsManager() {
                       </div>
                     </div>
                     <div className="flex gap-2 sm:col-span-2">
-                      <button type="button" onClick={() => saveEdit(admin)} className="rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950">
+                      <button type="button" onClick={() => saveEdit(admin)} className="btn-gradient rounded-full px-3 py-1.5 text-xs font-semibold text-forest-950">
                         Guardar
                       </button>
                       <button type="button" onClick={() => setEditingId(null)} className="rounded-full border border-forest-700 px-3 py-1.5 text-xs text-slate-300">
@@ -135,12 +179,12 @@ export default function AdministratorsManager() {
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <span className="rounded-full bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-400">
-                          {resourceTypeLabels[admin.scope?.resourceType ?? ""] ?? admin.scope?.resourceType}
+                          {adminCategoryLabels[getAdminCategoryKey(admin) ?? ""] ?? admin.scope?.resourceType}
                         </span>
                         <button
                           type="button"
                           onClick={() => startEdit(admin)}
-                          className="btn-brand-font rounded-full bg-brand-500 px-3 py-1.5 text-xs font-semibold text-forest-950 transition hover:bg-brand-400"
+                          className="btn-brand-font btn-gradient rounded-full px-3 py-1.5 text-xs font-semibold text-forest-950 transition"
                         >
                           Editar
                         </button>

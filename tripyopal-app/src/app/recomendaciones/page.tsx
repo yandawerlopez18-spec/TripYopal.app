@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useDataHydration } from "../context/DataHydrationContext";
 import { featuredPlaces } from "../services/content";
 
 const gradients = [
@@ -10,12 +11,14 @@ const gradients = [
 ];
 
 export default function RecomendacionesPage() {
+  useDataHydration();
+
   return (
     <main className="min-h-screen bg-forest-950 px-6 py-6 text-slate-100 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <Link
           href="/"
-          className="btn-brand-font inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+          className="btn-brand-font btn-gradient inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
         >
           ← Volver al inicio
         </Link>

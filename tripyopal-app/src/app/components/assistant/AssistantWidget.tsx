@@ -35,7 +35,7 @@ export default function AssistantWidget() {
               setMessage(item);
               setReply(getAssistantReply(item));
             }}
-            className="btn-brand-font rounded-full bg-brand-500 px-3 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+            className="btn-brand-font btn-gradient rounded-full px-3 py-2 text-sm font-semibold text-forest-950 transition"
           >
             {item}
           </button>
@@ -49,7 +49,7 @@ export default function AssistantWidget() {
       />
       <button
         onClick={handleSend}
-        className="btn-brand-font mt-4 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brand-400"
+        className="btn-brand-font btn-gradient mt-4 rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
       >
         Enviar
       </button>

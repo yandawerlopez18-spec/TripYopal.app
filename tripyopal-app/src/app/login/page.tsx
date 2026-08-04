@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [status, setStatus] = useState("Ingrese sus credenciales para continuar.");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.email || !form.password) {
@@ -19,7 +19,7 @@ export default function LoginPage() {
       return;
     }
 
-    const result = login(form.email, form.password);
+    const result = await login(form.email, form.password);
 
     if (!result) {
       setStatus("Credenciales inválidas. Prueba con admin@tripyopal.com, dueno@sitex.com o visitante@example.com.");
@@ -60,8 +60,16 @@ export default function LoginPage() {
   })();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-forest-950 px-6 py-20 text-slate-100 lg:px-8">
-      <div className="w-full max-w-xl rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
+    <main className="min-h-screen bg-forest-950 px-6 py-20 text-slate-100 lg:px-8">
+      <div className="mx-auto w-full max-w-xl">
+        <Link
+          href="/"
+          className="btn-brand-font btn-gradient inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-forest-950 transition"
+        >
+          ← Volver al inicio
+        </Link>
+
+        <div className="mt-6 rounded-3xl border border-forest-700 bg-forest-900 p-8 shadow-xl">
         <h1 className="text-center font-[family-name:var(--font-brand)] text-3xl font-bold text-white">Iniciar sesión</h1>
         <p className="mt-2 text-center text-sm text-slate-400">Accede a tus rutas, favoritos y recomendaciones personalizadas.</p>
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -82,7 +90,7 @@ export default function LoginPage() {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
-          <button className="w-full rounded-full bg-brand-500 px-4 py-3 font-semibold text-forest-950 transition hover:bg-brand-400">
+          <button className="btn-gradient w-full rounded-full px-4 py-3 font-semibold text-forest-950 transition">
             Entrar
           </button>
         </form>
@@ -90,6 +98,7 @@ export default function LoginPage() {
         <p className="mt-4 text-sm text-slate-400">
           ¿No tienes cuenta? <Link href="/registro" className="font-semibold text-brand-400 hover:text-brand-300">Regístrate</Link>
         </p>
+        </div>
       </div>
     </main>
   );

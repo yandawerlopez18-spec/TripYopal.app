@@ -1,4 +1,5 @@
 import { BUSINESS_CATEGORIES } from "../components/home/categoryIcons";
+import { formatEventDate } from "../utils/eventDate";
 import { listPrestadores } from "./prestadores";
 import { featuredEvents, featuredPlaces, featuredRoutes } from "./content";
 
@@ -117,7 +118,7 @@ export function search(query: string): SearchResult[] {
         id: `evento-${event.id}`,
         typeLabel: "Evento",
         title: event.title,
-        subtitle: `${event.date} · ${event.place}`,
+        subtitle: `${formatEventDate(event.date)} · ${event.place}`,
         description: event.description,
         href: `/eventos/${event.id}`,
       });
