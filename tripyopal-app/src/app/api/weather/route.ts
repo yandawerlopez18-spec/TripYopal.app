@@ -212,7 +212,7 @@ export async function GET() {
       visibility: data.visibility ? Math.round(data.visibility / 100) / 10 : fallbackWeather.visibility,
       uvIndex: computeUvIndex(now),
       dewPoint: computeDewPoint(temperature, humidity),
-      precipitation: Math.round(((data.rain?.["1h"] ?? data.rain?.["3h"] ?? 0.2) + Number.EPSILON) * 10) / 10,
+      precipitation: Math.round(((data.rain?.["1h"] ?? data.rain?.["3h"] ?? 0) + Number.EPSILON) * 10) / 10,
       rainChance: currentRainChance,
       sunrise: data.sys?.sunrise ? formatHour(data.sys.sunrise, timezoneOffset) : fallbackWeather.sunrise,
       sunset: data.sys?.sunset ? formatHour(data.sys.sunset, timezoneOffset) : fallbackWeather.sunset,
