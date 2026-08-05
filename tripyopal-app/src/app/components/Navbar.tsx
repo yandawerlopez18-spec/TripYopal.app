@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { ChevronDownIcon, ShieldIcon } from "./home/infoIcons";
+import { ChevronDownIcon, HelpCircleIcon, ShieldIcon } from "./home/infoIcons";
 
 const roleLabels: Record<string, string> = {
   turista: "Turista",
@@ -138,6 +138,15 @@ export default function Navbar() {
               ) : null}
             </div>
           )}
+
+          <Link
+            href="/manual-de-uso"
+            title="Manual de uso"
+            className="flex items-center gap-1.5 rounded-full border border-forest-700 bg-forest-900 px-3 py-2 text-slate-200 transition hover:border-brand-400 hover:text-brand-400"
+          >
+            <HelpCircleIcon className="h-4 w-4" />
+            Ayuda
+          </Link>
         </div>
       </div>
     </nav>

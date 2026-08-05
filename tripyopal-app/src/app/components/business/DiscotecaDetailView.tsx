@@ -28,6 +28,7 @@ import {
 import { addReview, listPrestadoresByCategory, type Prestador, type ReviewAspects } from "../../services/prestadores";
 import { siteContent } from "../../services/siteContent";
 import { AMENITY_CATALOG } from "../../utils/businessProfileConfig";
+import { formatCOP } from "../../utils/formatters";
 
 const GUEST_ASPECTS: { key: keyof ReviewAspects; label: string }[] = [
   { key: "comfort", label: "Ambiente" },
@@ -78,18 +79,6 @@ function priceRangeInfo(priceRange?: string): { symbol: string; label: string } 
   return null;
 }
 
-function eventDateParts(dateStr: string): { day: string; month: string } {
-  try {
-    const date = new Date(dateStr + "T00:00:00");
-    return {
-      day: date.toLocaleDateString("es-CO", { day: "2-digit" }),
-      month: date.toLocaleDateString("es-CO", { month: "short" }).replace(".", "").toUpperCase(),
-    };
-  } catch {
-    return { day: "--", month: "" };
-  }
-}
-
 function eventWeekday(dateStr: string): string {
   try {
     return new Date(dateStr + "T00:00:00").toLocaleDateString("es-CO", { weekday: "long" });
@@ -129,6 +118,9 @@ export default function DiscotecaDetailView({
   const { permissions } = useAuth();
   const [heroIndex, setHeroIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [aboutExpanded, setAboutExpanded] = useState(false);
+  const [menuPage, setMenuPage] = useState(1);
+  const [selectedEventIndex, setSelectedEventIndex] = useState(0);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [dataVersion, setDataVersion] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -161,6 +153,8 @@ export default function DiscotecaDetailView({
   ].filter((url): url is string => Boolean(url));
   const reviews = prestador.reviews ?? [];
   const promotions = prestador.promotions ?? [];
+  const items = prestador.items ?? [];
+  const highlights = prestador.highlights ?? [];
   const venueEvents = prestador.venueEvents ?? [];
   const media = prestador.media ?? [];
   const amenities = prestador.amenities ?? [];
@@ -169,6 +163,11 @@ export default function DiscotecaDetailView({
   const priceInfo = priceRangeInfo(prestador.priceRange);
 
   const hasImportantInfo = Boolean(prestador.schedule || prestador.siteType || prestador.bestTimeToVisit || prestador.priceRange || prestador.keyServices || prestador.idealFor);
+
+  const MENU_PER_PAGE = 10;
+  const totalMenuPages = Math.max(1, Math.ceil(items.length / MENU_PER_PAGE));
+  const currentMenuPage = Math.min(menuPage, totalMenuPages);
+  const visibleMenuItems = items.slice((currentMenuPage - 1) * MENU_PER_PAGE, currentMenuPage * MENU_PER_PAGE);
 
   const REVIEWS_PER_PAGE = 3;
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
@@ -384,15 +383,16 @@ export default function DiscotecaDetailView({
                 </span>
               </div>
 
-              {compactFeatures.length > 0 ? (
-                <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-                  {compactFeatures.map((amenity) => (
-                    <div key={amenity.key} className="flex flex-col items-center gap-1 rounded-xl border border-forest-700 bg-forest-900 p-3 text-center">
-                      <span className="text-xl">{amenity.icon}</span>
-                      <p className="text-[11px] font-medium leading-tight text-slate-200">{amenity.label}</p>
-                      {amenity.sublabel ? <p className="text-[10px] leading-tight text-slate-500">{amenity.sublabel}</p> : null}
-                    </div>
-                  ))}
+              {prestador.description ? (
+                <div className="mt-4">
+                  <p className={`text-sm leading-6 text-slate-400 ${aboutExpanded ? "" : "line-clamp-3"}`}>{prestador.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => setAboutExpanded((v) => !v)}
+                    className="mt-1 text-sm font-semibold text-pink-400 hover:underline"
+                  >
+                    {aboutExpanded ? "Leer menos ↑" : "Leer más ↓"}
+                  </button>
                 </div>
               ) : null}
 
@@ -431,6 +431,47 @@ export default function DiscotecaDetailView({
               {shareMessage ? <p className="mt-2 text-sm text-pink-400">{shareMessage}</p> : null}
             </div>
 
+            {/* Carta */}
+            {items.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Carta</h2>
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                  {visibleMenuItems.map((item) => (
+                    <div key={item.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
+                      {item.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.imageUrl} alt={item.name} className="h-32 w-full object-cover" />
+                      ) : (
+                        <div className="h-32 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                      )}
+                      <div className="p-3">
+                        <p className="truncate text-sm font-semibold text-slate-100">{item.name}</p>
+                        {item.price ? <p className="mt-1 text-sm font-bold text-pink-400">{formatCOP(item.price)}</p> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {totalMenuPages > 1 ? (
+                  <div className="mt-5 flex items-center justify-center gap-2">
+                    {Array.from({ length: totalMenuPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setMenuPage(page)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+                          currentMenuPage === page
+                            ? "bg-pink-500 text-white"
+                            : "border border-forest-700 text-slate-300 hover:bg-forest-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {/* Próximos eventos */}
             {venueEvents.length > 0 ? (
               <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
@@ -440,25 +481,70 @@ export default function DiscotecaDetailView({
                     Ver todos
                   </Link>
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {venueEvents.map((event) => {
-                    const { day, month } = eventDateParts(event.date);
-                    const weekday = eventWeekday(event.date);
+                <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+                  {(() => {
+                    const featuredEvent = venueEvents[Math.min(selectedEventIndex, venueEvents.length - 1)];
+                    const featuredWeekday = eventWeekday(featuredEvent.date);
                     return (
-                      <div key={event.id} className="flex items-start gap-3 rounded-xl border border-forest-700 bg-forest-950 p-3">
-                        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-pink-500/15 text-pink-400">
-                          <span className="text-lg font-bold leading-none">{day}</span>
-                          <span className="text-[10px] font-semibold leading-none">{month}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-100">{event.title}</p>
-                          <p className="capitalize text-xs text-slate-400">{weekday}</p>
-                          {event.time ? <p className="text-xs text-slate-400">{event.time}</p> : null}
-                          {event.description ? <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{event.description}</p> : null}
+                      <div className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
+                        {featuredEvent.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={featuredEvent.imageUrl} alt={featuredEvent.title} className="h-auto w-full" />
+                        ) : (
+                          <div className="h-48 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                        )}
+                        <div className="p-4">
+                          <p className="text-base font-semibold text-slate-100">{featuredEvent.title}</p>
+                          <p className="capitalize text-sm text-pink-400">{featuredWeekday}</p>
+                          {featuredEvent.time ? <p className="text-sm text-slate-400">{featuredEvent.time}</p> : null}
+                          {featuredEvent.description ? <p className="mt-1 text-sm text-slate-400">{featuredEvent.description}</p> : null}
                         </div>
                       </div>
                     );
-                  })}
+                  })()}
+
+                  <div className="flex gap-3 overflow-x-auto lg:max-h-[28rem] lg:flex-col lg:overflow-x-visible lg:overflow-y-auto">
+                    {venueEvents.map((event, index) => {
+                      const isSelected = index === Math.min(selectedEventIndex, venueEvents.length - 1);
+                      return (
+                        <button
+                          key={event.id}
+                          type="button"
+                          onClick={() => setSelectedEventIndex(index)}
+                          className={`flex w-40 shrink-0 items-center gap-2 overflow-hidden rounded-lg border p-2 text-left transition lg:w-full ${
+                            isSelected ? "border-pink-400 bg-pink-500/10" : "border-forest-700 bg-forest-950 hover:border-pink-400/60"
+                          }`}
+                        >
+                          {event.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={event.imageUrl} alt={event.title} className="h-14 w-14 shrink-0 rounded-md object-cover" />
+                          ) : (
+                            <div className="h-14 w-14 shrink-0 rounded-md bg-gradient-to-br from-forest-800 to-forest-950" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-slate-100">{event.title}</p>
+                            {event.time ? <p className="truncate text-[11px] text-slate-400">{event.time}</p> : null}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Servicios */}
+            {compactFeatures.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Servicios</h2>
+                <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                  {compactFeatures.map((amenity) => (
+                    <div key={amenity.key} className="flex flex-col items-center gap-1 rounded-xl border border-forest-700 bg-forest-950 p-3 text-center">
+                      <span className="text-xl">{amenity.icon}</span>
+                      <p className="text-[11px] font-medium leading-tight text-slate-200">{amenity.label}</p>
+                      {amenity.sublabel ? <p className="text-[10px] leading-tight text-slate-500">{amenity.sublabel}</p> : null}
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -603,6 +689,21 @@ export default function DiscotecaDetailView({
               ) : null}
             </div>
 
+            {/* Políticas */}
+            {prestador.policies && prestador.policies.length > 0 ? (
+              <div id="politicas" className="mt-6 scroll-mt-20 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Políticas</h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {prestador.policies.map((policy) => (
+                    <div key={policy.id} className="rounded-2xl bg-forest-950 p-4">
+                      <p className="text-sm font-semibold text-pink-400">{policy.title}</p>
+                      <p className="mt-1 text-sm text-slate-300">{policy.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             {/* Galería del lugar */}
             {media.length > 0 ? (
               <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
@@ -705,6 +806,50 @@ export default function DiscotecaDetailView({
               </div>
             ) : null}
 
+            {hasImportantInfo ? (
+              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-center text-base font-bold text-slate-100">Información importante</h2>
+                <div className="mt-4 grid grid-cols-1 gap-4 text-sm">
+                  {prestador.schedule ? (
+                    <div className="flex items-start gap-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+                      <span><span className="block text-slate-500">Horario de atención</span><span className="text-slate-200">{prestador.schedule}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.siteType ? (
+                    <div className="flex items-start gap-3">
+                      <TagIcon className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+                      <span><span className="block text-slate-500">Tipo de lugar</span><span className="text-slate-200">{prestador.siteType}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.bestTimeToVisit ? (
+                    <div className="flex items-start gap-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+                      <span><span className="block text-slate-500">Mejor momento</span><span className="text-slate-200">{prestador.bestTimeToVisit}</span></span>
+                    </div>
+                  ) : null}
+                  {priceInfo ? (
+                    <div className="flex items-start gap-3">
+                      <TagIcon className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+                      <span><span className="block text-slate-500">Rango de precios</span><span className="text-slate-200">{priceInfo.symbol} {priceInfo.label}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.keyServices ? (
+                    <div className="flex items-start gap-3">
+                      <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+                      <span><span className="block text-slate-500">Servicios destacados</span><span className="text-slate-200">{prestador.keyServices}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.idealFor ? (
+                    <div className="flex items-start gap-3">
+                      <UsersIcon className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+                      <span><span className="block text-slate-500">Ideal para</span><span className="text-slate-200">{prestador.idealFor}</span></span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
             {promotions.length > 0 ? (
               <div className="rounded-2xl border border-pink-500/30 bg-forest-900 p-6">
                 <h2 className="text-center text-lg font-bold text-slate-100">Promociones</h2>
@@ -718,22 +863,6 @@ export default function DiscotecaDetailView({
                 </div>
               </div>
             ) : null}
-
-            <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6 text-center">
-              <span className="mx-auto block h-20 w-20 overflow-hidden rounded-full border-2 border-pink-400">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={siteContent.images.mascot} alt="TripYopal IA" className="h-full w-full object-cover" />
-              </span>
-              <h2 className="mt-3 text-base font-bold text-slate-100">TripYopal IA</h2>
-              <p className="mt-1 text-xs text-slate-400">¿Buscas la mejor rumba en Yopal? Estoy aquí para recomendarte los mejores lugares.</p>
-              <button
-                type="button"
-                onClick={openChat}
-                className="mt-4 w-full rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-              >
-                Hablar con IA
-              </button>
-            </div>
 
             <div id="ubicacion" className="scroll-mt-20 rounded-2xl border border-forest-700 bg-forest-900 p-6">
               <div className="flex items-center justify-between">
@@ -799,46 +928,17 @@ export default function DiscotecaDetailView({
               </div>
             ) : null}
 
-            {hasImportantInfo ? (
+            {highlights.length > 0 ? (
               <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <h2 className="text-center text-base font-bold text-slate-100">Información importante</h2>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                  {prestador.schedule ? (
-                    <div className="flex items-start gap-2">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                      <span><span className="block text-slate-500">Horario de atención</span><span className="text-slate-200">{prestador.schedule}</span></span>
+                <h2 className="text-base font-bold text-slate-100">Lo que nos hace únicos</h2>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  {highlights.map((highlight) => (
+                    <div key={highlight.id} className="rounded-xl border border-forest-700 bg-forest-950 p-3 text-center">
+                      <span className="text-xl">{highlight.icon}</span>
+                      <p className="mt-1 text-xs font-semibold text-slate-100">{highlight.title}</p>
+                      <p className="mt-0.5 text-[11px] leading-tight text-slate-400">{highlight.description}</p>
                     </div>
-                  ) : null}
-                  {prestador.siteType ? (
-                    <div className="flex items-start gap-2">
-                      <TagIcon className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                      <span><span className="block text-slate-500">Tipo de lugar</span><span className="text-slate-200">{prestador.siteType}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.bestTimeToVisit ? (
-                    <div className="flex items-start gap-2">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                      <span><span className="block text-slate-500">Mejor momento</span><span className="text-slate-200">{prestador.bestTimeToVisit}</span></span>
-                    </div>
-                  ) : null}
-                  {priceInfo ? (
-                    <div className="flex items-start gap-2">
-                      <TagIcon className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                      <span><span className="block text-slate-500">Rango de precios</span><span className="text-slate-200">{priceInfo.symbol} {priceInfo.label}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.keyServices ? (
-                    <div className="col-span-2 flex items-start gap-2">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                      <span><span className="block text-slate-500">Servicios destacados</span><span className="text-slate-200">{prestador.keyServices}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.idealFor ? (
-                    <div className="flex items-start gap-2">
-                      <UsersIcon className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                      <span><span className="block text-slate-500">Ideal para</span><span className="text-slate-200">{prestador.idealFor}</span></span>
-                    </div>
-                  ) : null}
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -855,6 +955,22 @@ export default function DiscotecaDetailView({
                 </ul>
               </div>
             ) : null}
+
+            <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6 text-center">
+              <span className="mx-auto block h-20 w-20 overflow-hidden rounded-full border-2 border-pink-400">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={siteContent.images.mascot} alt="TripYopal IA" className="h-full w-full object-cover" />
+              </span>
+              <h2 className="mt-3 text-base font-bold text-slate-100">TripYopal IA</h2>
+              <p className="mt-1 text-xs text-slate-400">¿Buscas la mejor rumba en Yopal? Estoy aquí para recomendarte los mejores lugares.</p>
+              <button
+                type="button"
+                onClick={openChat}
+                className="mt-4 w-full rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Hablar con IA
+              </button>
+            </div>
           </div>
         </div>
       </div>

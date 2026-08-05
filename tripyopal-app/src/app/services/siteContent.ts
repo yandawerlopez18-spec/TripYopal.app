@@ -121,6 +121,8 @@ const seedSiteContent = {
     gmail: "",
     x: "",
     whatsapp: "",
+    tiktok: "",
+    youtube: "",
   },
   sections: {} as Record<string, Record<string, string>>,
 };

@@ -188,7 +188,9 @@ function PaymentBadges() {
 }
 
 export default function ContactFooter() {
-  const [status, setStatus] = useState("");
+  const [form, setForm] = useState({ email: "", subject: "", message: "" });
+  const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const contactItems = [
     { label: "Dirección", value: siteContent.contact.address, tone: "text-slate-200" },
@@ -197,13 +199,34 @@ export default function ContactFooter() {
     { label: "Email", value: siteContent.contact.email, tone: "text-brand-400 font-semibold" },
   ] as const;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("Gracias, hemos recibido tu solicitud.");
+    setSending(true);
+    setStatus(null);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.ok) {
+        setStatus({ type: "success", text: "Gracias, hemos recibido tu solicitud. Te responderemos pronto a tu correo." });
+        setForm({ email: "", subject: "", message: "" });
+      } else {
+        setStatus({ type: "error", text: data?.error || "No pudimos enviar tu solicitud. Intenta de nuevo." });
+      }
+    } catch {
+      setStatus({ type: "error", text: "No pudimos enviar tu solicitud. Revisa tu conexión e intenta de nuevo." });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-    <footer className="mt-16 border-t border-forest-700 bg-forest-900">
+    <footer id="contacto" className="mt-16 scroll-mt-24 border-t border-forest-700 bg-forest-900">
       <div className="mx-auto max-w-8xl px-6 py-14 lg:px-8">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-3xl border border-forest-700 bg-forest-950 p-6 shadow-sm">
@@ -274,6 +297,8 @@ export default function ContactFooter() {
                   autoCorrect="off"
                   autoCapitalize="off"
                   placeholder="Ingresa tu correo aquí"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
                 />
               </div>
@@ -283,6 +308,8 @@ export default function ContactFooter() {
                   type="text"
                   required
                   placeholder="Escríbenos tu solicitud"
+                  value={form.subject}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
                   className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
                 />
               </div>
@@ -292,19 +319,29 @@ export default function ContactFooter() {
                   required
                   rows={3}
                   placeholder="Cuéntanos cómo podemos ayudarte..."
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full resize-y bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
                 />
               </div>
 
-              <button className="btn-brand-font btn-gradient flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-forest-950">
-                <SendIcon className="h-4 w-4" /> Enviar solicitud
+              <button
+                type="submit"
+                disabled={sending}
+                className="btn-brand-font btn-gradient flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-forest-950 disabled:opacity-60"
+              >
+                <SendIcon className="h-4 w-4" /> {sending ? "Enviando..." : "Enviar solicitud"}
               </button>
 
               <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
                 <LockIcon /> Tu información está segura con nosotros.
               </p>
 
-              {status ? <p className="text-center text-sm font-medium text-brand-400">{status}</p> : null}
+              {status ? (
+                <p className={`text-center text-sm font-medium ${status.type === "success" ? "text-brand-400" : "text-red-400"}`}>
+                  {status.text}
+                </p>
+              ) : null}
             </form>
           </div>
         </div>

@@ -175,6 +175,23 @@ export function DocumentIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+export function BookIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z" strokeLinejoin="round" />
+      <path d="M4 5.5v15" />
+    </svg>
+  );
+}
+
+export function MessageCircleIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 12a8 8 0 1 1 3.5 6.6L4 20l1.2-3.6A7.9 7.9 0 0 1 4 12Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function BellIcon({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg {...base} className={className}>
@@ -385,6 +402,16 @@ export function ShieldIcon({ className = "h-5 w-5" }: IconProps) {
     <svg {...base} className={className}>
       <path d="M12 3.5 5 6v5.5c0 5 3 8.3 7 9 4-.7 7-4 7-9V6l-7-2.5Z" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+export function HelpCircleIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.3a2.5 2.5 0 1 1 3.7 2.2c-.8.5-1.2 1-1.2 1.9" />
+      <circle cx="12" cy="16.7" r="0.9" fill="currentColor" stroke="none" />
     </svg>
   );
 }
