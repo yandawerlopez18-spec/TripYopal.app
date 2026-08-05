@@ -16,7 +16,6 @@ import {
   GlobeIcon,
   HeadsetIcon,
   HeartIcon,
-  InstagramIcon,
   MailIcon,
   PhoneIcon,
   ShareIcon,
@@ -46,18 +45,6 @@ const COMPACT_FEATURE_KEYS = [
   "tiendasCafes",
   "parqueaderoTransporte",
   "accesibleTransporte",
-];
-
-const SIDEBAR_SERVICE_KEYS = [
-  "salasVipTransporte",
-  "wifiGratuitoTransporte",
-  "restaurantesCafes",
-  "tiendasDutyFree",
-  "alquilerVehiculos",
-  "cajerosAutomaticos",
-  "informacionTuristica",
-  "atencionMedica",
-  "objetosPerdidos",
 ];
 
 const TRUST_BADGES = [
@@ -115,6 +102,8 @@ export default function TransporteDetailView({
   const { permissions } = useAuth();
   const [heroIndex, setHeroIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [aboutExpanded, setAboutExpanded] = useState(false);
+  const [newsPage, setNewsPage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [dataVersion, setDataVersion] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -144,10 +133,13 @@ export default function TransporteDetailView({
   const promotions = prestador.promotions ?? [];
   const amenities = prestador.amenities ?? [];
   const compactFeatures = AMENITY_CATALOG.filter((a) => COMPACT_FEATURE_KEYS.includes(a.key) && amenities.includes(a.key));
-  const sidebarServices = AMENITY_CATALOG.filter((a) => SIDEBAR_SERVICE_KEYS.includes(a.key) && amenities.includes(a.key));
   const flights = prestador.flights ?? [];
   const transportOptions = prestador.transportOptions ?? [];
   const news = prestador.news ?? [];
+  const NEWS_PER_PAGE = 6;
+  const totalNewsPages = Math.max(1, Math.ceil(news.length / NEWS_PER_PAGE));
+  const currentNewsPage = Math.min(newsPage, totalNewsPages);
+  const visibleNews = news.slice((currentNewsPage - 1) * NEWS_PER_PAGE, currentNewsPage * NEWS_PER_PAGE);
   const visitTips = prestador.visitTips ?? [];
   const highlightChips = (prestador.highlights ?? []).slice(0, 2);
   const subtypeLabel = (prestador.siteType || categoryLabel).toLowerCase();
@@ -373,15 +365,16 @@ export default function TransporteDetailView({
                 ) : null}
               </div>
 
-              {compactFeatures.length > 0 ? (
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                  {compactFeatures.map((feature) => (
-                    <div key={feature.key} className="flex flex-col items-center gap-1.5 rounded-xl border border-forest-700 bg-forest-900 p-3 text-center">
-                      <span className="text-xl">{feature.icon}</span>
-                      <p className="text-[11px] font-medium leading-tight text-slate-200">{feature.label}</p>
-                      {feature.sublabel ? <p className="text-[10px] leading-tight text-slate-500">{feature.sublabel}</p> : null}
-                    </div>
-                  ))}
+              {prestador.description ? (
+                <div className="mt-4">
+                  <p className={`text-sm leading-6 text-slate-400 ${aboutExpanded ? "" : "line-clamp-3"}`}>{prestador.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => setAboutExpanded((v) => !v)}
+                    className="mt-1 text-sm font-semibold text-brand-400 hover:underline"
+                  >
+                    {aboutExpanded ? "Leer menos ↑" : "Leer más ↓"}
+                  </button>
                 </div>
               ) : null}
 
@@ -432,54 +425,85 @@ export default function TransporteDetailView({
               {shareMessage ? <p className="mt-2 text-sm text-brand-400">{shareMessage}</p> : null}
             </div>
 
-            {/* Vuelos principales + Servicios */}
-            {flights.length > 0 || sidebarServices.length > 0 ? (
-              <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                {flights.length > 0 ? (
-                  <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-100">Vuelos principales</h2>
-                      <Link href={`/categorias/${categoryKey}`} className="text-sm font-semibold text-brand-400 hover:underline">
-                        Ver todos los vuelos
-                      </Link>
+            {/* Vuelos principales */}
+            {flights.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-100">Vuelos principales</h2>
+                  <Link href={`/categorias/${categoryKey}`} className="text-sm font-semibold text-brand-400 hover:underline">
+                    Ver todos los vuelos
+                  </Link>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {flights.map((flight) => (
+                    <div key={flight.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-forest-700 bg-forest-950 p-3">
+                      {flight.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={flight.imageUrl} alt={flight.airline} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-xs font-bold text-brand-400">
+                          {flight.airline.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-slate-100">{flight.airline}</p>
+                        <p className="truncate text-xs text-slate-400">
+                          {flight.origin} ⇄ {flight.destination} · {flight.frequency}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          flight.direct ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
+                        }`}
+                      >
+                        {flight.direct ? "Directo" : "Con conexión"}
+                      </span>
                     </div>
-                    <div className="mt-4 space-y-2">
-                      {flights.map((flight) => (
-                        <div key={flight.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-forest-700 bg-forest-950 p-3">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-xs font-bold text-brand-400">
-                            {flight.airline.charAt(0).toUpperCase()}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-slate-100">{flight.airline}</p>
-                            <p className="truncate text-xs text-slate-400">
-                              {flight.origin} ⇄ {flight.destination} · {flight.frequency}
-                            </p>
-                          </div>
-                          <span
-                            className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                              flight.direct ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
-                            }`}
-                          >
-                            {flight.direct ? "Directo" : "Con conexión"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
-                {sidebarServices.length > 0 ? (
-                  <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                    <h2 className="text-lg font-bold text-slate-100">Servicios en el {subtypeLabel}</h2>
-                    <div className="mt-4 space-y-2.5 text-sm text-slate-300">
-                      {sidebarServices.map((service) => (
-                        <div key={service.key} className="flex items-center gap-2">
-                          <span>{service.icon}</span> {service.label}
-                        </div>
-                      ))}
+            {/* Transporte desde/hacia */}
+            {transportOptions.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Transporte desde/hacia el {subtypeLabel}</h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {transportOptions.map((option) => (
+                    <div key={option.id} className="flex items-start justify-between gap-3 rounded-xl border border-forest-700 bg-forest-950 p-3">
+                      <span className="flex items-start gap-2">
+                        <span className="text-base">{option.icon}</span>
+                        <span>
+                          <p className="text-sm font-semibold text-slate-200">{option.title}</p>
+                          <p className="text-xs text-slate-500">{option.subtitle}</p>
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right text-xs text-slate-300">{option.duration}</span>
                     </div>
-                  </div>
-                ) : null}
+                  ))}
+                </div>
+                <Link
+                  href={`/categorias/${categoryKey}`}
+                  className="mt-4 block rounded-full border border-forest-700 py-2 text-center text-sm font-semibold text-slate-200 transition hover:bg-forest-800"
+                >
+                  Ver opciones de transporte
+                </Link>
+              </div>
+            ) : null}
+
+            {/* Servicios */}
+            {compactFeatures.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Servicios</h2>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                  {compactFeatures.map((feature) => (
+                    <div key={feature.key} className="flex flex-col items-center gap-1.5 rounded-xl border border-forest-700 bg-forest-950 p-3 text-center">
+                      <span className="text-xl">{feature.icon}</span>
+                      <p className="text-[11px] font-medium leading-tight text-slate-200">{feature.label}</p>
+                      {feature.sublabel ? <p className="text-[10px] leading-tight text-slate-500">{feature.sublabel}</p> : null}
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
 
@@ -628,8 +652,8 @@ export default function TransporteDetailView({
                     Ver todas
                   </Link>
                 </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  {news.map((item) => (
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {visibleNews.map((item) => (
                     <div key={item.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
                       {item.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -642,6 +666,39 @@ export default function TransporteDetailView({
                         <p className="mt-1 line-clamp-2 text-xs text-slate-400">{item.description}</p>
                         <span className="mt-2 inline-block text-xs font-semibold text-brand-400">Leer más ›</span>
                       </div>
+                    </div>
+                  ))}
+                </div>
+                {totalNewsPages > 1 ? (
+                  <div className="mt-5 flex items-center justify-center gap-2">
+                    {Array.from({ length: totalNewsPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setNewsPage(page)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+                          currentNewsPage === page
+                            ? "bg-brand-500 text-forest-950"
+                            : "border border-forest-700 text-slate-300 hover:bg-forest-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Políticas */}
+            {prestador.policies && prestador.policies.length > 0 ? (
+              <div id="politicas" className="mt-6 scroll-mt-20 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Políticas</h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {prestador.policies.map((policy) => (
+                    <div key={policy.id} className="rounded-2xl bg-forest-950 p-4">
+                      <p className="text-sm font-semibold text-brand-400">{policy.title}</p>
+                      <p className="mt-1 text-sm text-slate-300">{policy.description}</p>
                     </div>
                   ))}
                 </div>
@@ -678,19 +735,8 @@ export default function TransporteDetailView({
                       <GlobeIcon className="h-4 w-4 text-brand-400" /> {prestador.website.replace(/^https?:\/\//, "")}
                     </a>
                   ) : null}
-                  {prestador.instagram || prestador.facebook || prestador.twitter || prestador.tiktok ? (
+                  {prestador.facebook || prestador.twitter || prestador.tiktok ? (
                     <span className="ml-auto flex items-center gap-3">
-                      {prestador.instagram ? (
-                        <a
-                          href={`https://instagram.com/${prestador.instagram.replace("@", "")}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-forest-950 text-brand-400 transition hover:bg-brand-500/10"
-                          aria-label="Instagram"
-                        >
-                          <InstagramIcon className="h-4 w-4" />
-                        </a>
-                      ) : null}
                       {prestador.facebook ? (
                         <a
                           href={prestador.facebook.startsWith("http") ? prestador.facebook : `https://facebook.com/${prestador.facebook}`}
@@ -745,6 +791,70 @@ export default function TransporteDetailView({
 
           {/* Sidebar */}
           <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            {hasImportantInfo ? (
+              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-center text-base font-bold text-slate-100">Información importante</h2>
+                <div className="mt-4 grid grid-cols-1 gap-4 text-sm">
+                  {prestador.schedule ? (
+                    <div className="flex items-start gap-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Horario de atención</span><span className="text-slate-200">{prestador.schedule}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.siteType ? (
+                    <div className="flex items-start gap-3">
+                      <EventPinIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Tipo de transporte</span><span className="text-slate-200">{prestador.siteType}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.bestTimeToVisit ? (
+                    <div className="flex items-start gap-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Mejor momento</span><span className="text-slate-200">{prestador.bestTimeToVisit}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.priceRange ? (
+                    <div className="flex items-start gap-3">
+                      <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span>
+                        <span className="block text-slate-500">Rango de precios</span>
+                        <span className="text-slate-200">
+                          {prestador.priceRange === "Bajo" ? "$ Económico" : prestador.priceRange === "Alto" ? "$$$ Alto" : "$$ Moderado"}
+                        </span>
+                      </span>
+                    </div>
+                  ) : null}
+                  {prestador.keyServices ? (
+                    <div className="flex items-start gap-3">
+                      <ShieldIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Servicios destacados</span><span className="text-slate-200">{prestador.keyServices}</span></span>
+                    </div>
+                  ) : null}
+                  {prestador.idealFor ? (
+                    <div className="flex items-start gap-3">
+                      <HeartIcon className="mt-0.5 h-5 w-5 shrink-0 text-brand-400" />
+                      <span><span className="block text-slate-500">Ideal para</span><span className="text-slate-200">{prestador.idealFor}</span></span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {visitTips.length > 0 ? (
+              <div className="relative overflow-hidden rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-base font-bold text-slate-100">Consejos para tu viaje</h2>
+                <ul className="mt-3 max-w-[75%] space-y-2.5 text-sm text-slate-300">
+                  {visitTips.map((tip) => (
+                    <li key={tip} className="flex items-start gap-2">
+                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" /> {tip}
+                    </li>
+                  ))}
+                </ul>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={siteContent.images.mascot} alt="" className="absolute bottom-2 right-2 h-24 w-24 object-contain opacity-90" />
+              </div>
+            ) : null}
+
             {promotions.length > 0 ? (
               <div className="rounded-2xl border border-brand-500/30 bg-forest-900 p-6">
                 <h2 className="text-center text-lg font-bold text-slate-100">Promociones</h2>
@@ -758,22 +868,6 @@ export default function TransporteDetailView({
                 </div>
               </div>
             ) : null}
-
-            <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6 text-center">
-              <span className="mx-auto block h-20 w-20 overflow-hidden rounded-full border-2 border-brand-400">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={siteContent.images.mascot} alt="TripYopal IA" className="h-full w-full object-cover" />
-              </span>
-              <h2 className="mt-3 text-base font-bold text-slate-100">TripYopal IA</h2>
-              <p className="mt-1 text-xs text-slate-400">¿Necesitas ayuda para encontrar la mejor opción de transporte? Estoy aquí para ayudarte.</p>
-              <button
-                type="button"
-                onClick={openChat}
-                className="btn-brand-font btn-gradient mt-4 w-full rounded-full px-4 py-2.5 text-sm font-semibold text-forest-950 transition"
-              >
-                Hablar con IA
-              </button>
-            </div>
 
             <div id="ubicacion" className="scroll-mt-20 rounded-2xl border border-forest-700 bg-forest-900 p-6">
               <div className="flex items-center justify-between">
@@ -839,95 +933,21 @@ export default function TransporteDetailView({
               </div>
             ) : null}
 
-            {hasImportantInfo ? (
-              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <h2 className="text-center text-base font-bold text-slate-100">Información importante</h2>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                  {prestador.schedule ? (
-                    <div className="flex items-start gap-2">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Horario de atención</span><span className="text-slate-200">{prestador.schedule}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.siteType ? (
-                    <div className="flex items-start gap-2">
-                      <EventPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Tipo de transporte</span><span className="text-slate-200">{prestador.siteType}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.bestTimeToVisit ? (
-                    <div className="flex items-start gap-2">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Mejor momento</span><span className="text-slate-200">{prestador.bestTimeToVisit}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.priceRange ? (
-                    <div className="flex items-start gap-2">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span>
-                        <span className="block text-slate-500">Rango de precios</span>
-                        <span className="text-slate-200">
-                          {prestador.priceRange === "Bajo" ? "$ Económico" : prestador.priceRange === "Alto" ? "$$$ Alto" : "$$ Moderado"}
-                        </span>
-                      </span>
-                    </div>
-                  ) : null}
-                  {prestador.keyServices ? (
-                    <div className="col-span-2 flex items-start gap-2">
-                      <ShieldIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Servicios destacados</span><span className="text-slate-200">{prestador.keyServices}</span></span>
-                    </div>
-                  ) : null}
-                  {prestador.idealFor ? (
-                    <div className="flex items-start gap-2">
-                      <HeartIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                      <span><span className="block text-slate-500">Ideal para</span><span className="text-slate-200">{prestador.idealFor}</span></span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-
-            {transportOptions.length > 0 ? (
-              <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <h2 className="text-base font-bold text-slate-100">Transporte desde/hacia el {subtypeLabel}</h2>
-                <div className="mt-3 space-y-3 text-xs">
-                  {transportOptions.map((option) => (
-                    <div key={option.id} className="flex items-start justify-between gap-3">
-                      <span className="flex items-start gap-2">
-                        <span className="text-base">{option.icon}</span>
-                        <span>
-                          <p className="font-semibold text-slate-200">{option.title}</p>
-                          <p className="text-slate-500">{option.subtitle}</p>
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right text-slate-300">{option.duration}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href={`/categorias/${categoryKey}`}
-                  className="mt-4 block rounded-full border border-forest-700 py-2 text-center text-sm font-semibold text-slate-200 transition hover:bg-forest-800"
-                >
-                  Ver opciones de transporte
-                </Link>
-              </div>
-            ) : null}
-
-            {visitTips.length > 0 ? (
-              <div className="relative overflow-hidden rounded-2xl border border-forest-700 bg-forest-900 p-6">
-                <h2 className="text-base font-bold text-slate-100">Consejos para tu viaje</h2>
-                <ul className="mt-3 max-w-[75%] space-y-2.5 text-sm text-slate-300">
-                  {visitTips.map((tip) => (
-                    <li key={tip} className="flex items-start gap-2">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" /> {tip}
-                    </li>
-                  ))}
-                </ul>
+            <div className="rounded-2xl border border-forest-700 bg-forest-900 p-6 text-center">
+              <span className="mx-auto block h-20 w-20 overflow-hidden rounded-full border-2 border-brand-400">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={siteContent.images.mascot} alt="" className="absolute bottom-2 right-2 h-24 w-24 object-contain opacity-90" />
-              </div>
-            ) : null}
+                <img src={siteContent.images.mascot} alt="TripYopal IA" className="h-full w-full object-cover" />
+              </span>
+              <h2 className="mt-3 text-base font-bold text-slate-100">TripYopal IA</h2>
+              <p className="mt-1 text-xs text-slate-400">¿Necesitas ayuda para encontrar la mejor opción de transporte? Estoy aquí para ayudarte.</p>
+              <button
+                type="button"
+                onClick={openChat}
+                className="btn-brand-font btn-gradient mt-4 w-full rounded-full px-4 py-2.5 text-sm font-semibold text-forest-950 transition"
+              >
+                Hablar con IA
+              </button>
+            </div>
           </div>
         </div>
       </div>

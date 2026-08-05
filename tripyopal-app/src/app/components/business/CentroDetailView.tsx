@@ -28,6 +28,8 @@ import {
 import { addReview, listPrestadoresByCategory, type Prestador, type ReviewAspects } from "../../services/prestadores";
 import { siteContent } from "../../services/siteContent";
 import { AMENITY_CATALOG } from "../../utils/businessProfileConfig";
+import { formatEventDate } from "../../utils/eventDate";
+import { splitVenueEvents } from "../../utils/venueEvents";
 import ImageUploadField from "../admin/ImageUploadField";
 
 const GUEST_ASPECTS: { key: keyof ReviewAspects; label: string }[] = [
@@ -65,15 +67,11 @@ function ratingLabel(avg: number): string {
   return "Regular";
 }
 
-function eventDateParts(dateStr: string): { day: string; month: string } {
+function eventWeekday(dateStr: string): string {
   try {
-    const date = new Date(dateStr + "T00:00:00");
-    return {
-      day: date.toLocaleDateString("es-CO", { day: "2-digit" }),
-      month: date.toLocaleDateString("es-CO", { month: "short" }).replace(".", "").toUpperCase(),
-    };
+    return new Date(dateStr + "T00:00:00").toLocaleDateString("es-CO", { weekday: "long" });
   } catch {
-    return { day: "--", month: "" };
+    return "";
   }
 }
 
@@ -111,7 +109,8 @@ export default function CentroDetailView({
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [storesPage, setStoresPage] = useState(1);
   const [foodCourtPage, setFoodCourtPage] = useState(1);
-  const [venueEventsPage, setVenueEventsPage] = useState(1);
+  const [featuredEventIndices, setFeaturedEventIndices] = useState<number[]>([0, 1]);
+  const [nextFeaturedSlot, setNextFeaturedSlot] = useState(0);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [dataVersion, setDataVersion] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -166,10 +165,18 @@ export default function CentroDetailView({
   const currentFoodCourtPage = Math.min(foodCourtPage, totalFoodCourtPages);
   const visibleFoodCourt = foodCourt.slice((currentFoodCourtPage - 1) * FOOD_COURT_PER_PAGE, currentFoodCourtPage * FOOD_COURT_PER_PAGE);
 
-  const VENUE_EVENTS_PER_PAGE = 6;
-  const totalVenueEventsPages = Math.max(1, Math.ceil(venueEvents.length / VENUE_EVENTS_PER_PAGE));
-  const currentVenueEventsPage = Math.min(venueEventsPage, totalVenueEventsPages);
-  const visibleVenueEvents = venueEvents.slice((currentVenueEventsPage - 1) * VENUE_EVENTS_PER_PAGE, currentVenueEventsPage * VENUE_EVENTS_PER_PAGE);
+  const { upcoming: upcomingVenueEvents, past: pastVenueEvents } = splitVenueEvents(venueEvents);
+  const selectFeaturedEvent = (index: number) => {
+    setFeaturedEventIndices((current) => {
+      if (current.includes(index)) return current;
+      const next = [...current];
+      next[nextFeaturedSlot] = index;
+      return next;
+    });
+    setNextFeaturedSlot((slot) => (slot === 0 ? 1 : 0));
+  };
+  const featuredVenueEvents = featuredEventIndices.map((i) => upcomingVenueEvents[i]).filter(Boolean);
+  const laterVenueEvents = upcomingVenueEvents.filter((_, i) => !featuredEventIndices.includes(i));
 
   const REVIEWS_PER_PAGE = 3;
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
@@ -528,7 +535,7 @@ export default function CentroDetailView({
             ) : null}
 
             {/* Próximos eventos y actividades */}
-            {venueEvents.length > 0 ? (
+            {upcomingVenueEvents.length > 0 ? (
               <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-slate-100">Próximos eventos y actividades</h2>
@@ -536,51 +543,82 @@ export default function CentroDetailView({
                     Ver todos
                   </Link>
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  {visibleVenueEvents.map((event) => {
-                    const { day, month } = eventDateParts(event.date);
-                    return (
-                      <div key={event.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
-                        <div className="relative">
+                <div className="mt-4 grid gap-3 lg:grid-cols-[3fr_2fr]">
+                  <div className="grid grid-cols-2 gap-2">
+                    {featuredVenueEvents.map((event) => {
+                      const weekday = eventWeekday(event.date);
+                      return (
+                        <div key={event.id} className="mx-auto w-fit max-w-full overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
                           {event.imageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={event.imageUrl} alt={event.title} className="h-36 w-full object-cover" />
+                            <img src={event.imageUrl} alt={event.title} className="max-h-80 w-auto max-w-full object-contain" />
                           ) : (
-                            <div className="h-36 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                            <div className="h-48 w-72 max-w-full bg-gradient-to-br from-forest-800 to-forest-950" />
                           )}
-                          <div className="absolute left-2 top-2 flex h-12 w-12 flex-col items-center justify-center rounded-lg bg-brand-500/90 text-forest-950">
-                            <span className="text-base font-bold leading-none">{day}</span>
-                            <span className="text-[10px] font-semibold leading-none">{month}</span>
+                          <div className="p-3">
+                            <p className="text-base font-semibold text-slate-100">{event.title}</p>
+                            <p className="capitalize text-sm text-brand-400">{weekday}</p>
+                            {event.time ? <p className="text-sm text-slate-400">{event.time}</p> : null}
+                            {event.description ? <p className="mt-0.5 text-sm text-slate-400">{event.description}</p> : null}
                           </div>
                         </div>
-                        <div className="p-4">
-                          <p className="truncate text-base font-semibold text-slate-100">{event.title}</p>
-                          <p className="mt-0.5 text-sm text-slate-400">{event.time ?? ""}</p>
-                          {event.description ? <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-slate-300">{event.description}</p> : null}
-                          <p className="mt-1.5 truncate text-xs text-slate-500">{prestador.name}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {totalVenueEventsPages > 1 ? (
-                  <div className="mt-5 flex items-center justify-center gap-2">
-                    {Array.from({ length: totalVenueEventsPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        type="button"
-                        onClick={() => setVenueEventsPage(page)}
-                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
-                          currentVenueEventsPage === page
-                            ? "bg-brand-500 text-forest-950"
-                            : "border border-forest-700 text-slate-300 hover:bg-forest-800"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
-                ) : null}
+
+                  {laterVenueEvents.length > 0 ? (
+                    <div className="space-y-2 lg:max-h-[36rem] lg:overflow-y-auto">
+                      {laterVenueEvents.map((event) => {
+                        const weekday = eventWeekday(event.date);
+                        const absoluteIndex = upcomingVenueEvents.findIndex((e) => e.id === event.id);
+                        return (
+                          <button
+                            key={event.id}
+                            type="button"
+                            onClick={() => selectFeaturedEvent(absoluteIndex)}
+                            className="flex w-full items-center gap-2 rounded-xl border border-forest-700 bg-forest-950 p-2.5 text-left transition hover:border-brand-400/60"
+                          >
+                            {event.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={event.imageUrl} alt={event.title} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                            ) : (
+                              <div className="h-14 w-14 shrink-0 rounded-lg bg-gradient-to-br from-forest-800 to-forest-950" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-100">{event.title}</p>
+                              <p className="capitalize text-xs text-brand-400">{weekday}</p>
+                              {event.time ? <p className="text-xs text-slate-400">{event.time}</p> : null}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Galería (eventos pasados) */}
+            {pastVenueEvents.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-forest-700 bg-forest-900 p-6">
+                <h2 className="text-lg font-bold text-slate-100">Galería</h2>
+                <p className="text-sm text-slate-400">Fotos de eventos que ya pasaron.</p>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {pastVenueEvents.map((event) => (
+                    <div key={event.id} className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
+                      {event.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={event.imageUrl} alt={event.title} className="h-32 w-full object-cover" />
+                      ) : (
+                        <div className="h-32 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                      )}
+                      <div className="p-2">
+                        <p className="truncate text-xs font-semibold text-slate-200">{event.title}</p>
+                        <p className="text-[11px] text-slate-500">{formatEventDate(event.date)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
 

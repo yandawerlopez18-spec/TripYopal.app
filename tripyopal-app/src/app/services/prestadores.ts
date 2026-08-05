@@ -50,7 +50,7 @@ export type VenueEvent = { id: string; title: string; date: string; time?: strin
 export type FoodCourtItem = { id: string; name: string; subtitle?: string; imageUrl?: string };
 export type MenuCategoryItem = { id: string; icon: string; label: string };
 export type AllyBusiness = { id: string; name: string; subtitle?: string; imageUrl?: string };
-export type FlightRoute = { id: string; airline: string; origin: string; destination: string; frequency: string; direct: boolean };
+export type FlightRoute = { id: string; airline: string; origin: string; destination: string; frequency: string; direct: boolean; imageUrl?: string };
 export type TransportOption = { id: string; icon: string; title: string; subtitle: string; duration: string };
 export type NewsItem = { id: string; title: string; description: string; imageUrl?: string };
 

@@ -43,7 +43,7 @@ export default function TransporteOwnerEditor({ prestadorId, categoryKey, onSave
   }));
   const [generalMessage, setGeneralMessage] = useState("");
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
-  const [flightForm, setFlightForm] = useState({ airline: "", origin: "", destination: "", frequency: "", direct: true });
+  const [flightForm, setFlightForm] = useState({ airline: "", origin: "", destination: "", frequency: "", direct: true, imageUrl: "" });
   const [transportOptionForm, setTransportOptionForm] = useState({ icon: "", title: "", subtitle: "", duration: "" });
   const [newsForm, setNewsForm] = useState({ title: "", description: "", imageUrl: "" });
 
@@ -87,7 +87,7 @@ export default function TransporteOwnerEditor({ prestadorId, categoryKey, onSave
     e.preventDefault();
     if (!flightForm.airline || !flightForm.origin || !flightForm.destination) return;
     await addFlight(prestadorId, flightForm);
-    setFlightForm({ airline: "", origin: "", destination: "", frequency: "", direct: true });
+    setFlightForm({ airline: "", origin: "", destination: "", frequency: "", direct: true, imageUrl: "" });
     onSaved();
   };
 
@@ -190,10 +190,16 @@ export default function TransporteOwnerEditor({ prestadorId, categoryKey, onSave
         <ul className="mt-4 space-y-2">
           {flights.map((flight) => (
             <li key={flight.id} className="flex items-center justify-between gap-3 rounded-xl border border-forest-700 bg-forest-900 p-3">
-              <p className="min-w-0 truncate text-sm text-slate-200">
-                <span className="font-semibold">{flight.airline}</span> · {flight.origin} ⇄ {flight.destination} · {flight.frequency} ·{" "}
-                {flight.direct ? "Directo" : "Con conexión"}
-              </p>
+              <div className="flex min-w-0 items-center gap-3">
+                {flight.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={flight.imageUrl} alt={flight.airline} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                ) : null}
+                <p className="min-w-0 truncate text-sm text-slate-200">
+                  <span className="font-semibold">{flight.airline}</span> · {flight.origin} ⇄ {flight.destination} · {flight.frequency} ·{" "}
+                  {flight.direct ? "Directo" : "Con conexión"}
+                </p>
+              </div>
               <button type="button" onClick={() => handleDeleteFlight(flight.id)} className="shrink-0 rounded-full border border-red-500/40 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
                 Eliminar
               </button>
@@ -206,6 +212,10 @@ export default function TransporteOwnerEditor({ prestadorId, categoryKey, onSave
           <input className={inputClass} placeholder="Frecuencia (ej. Diario)" value={flightForm.frequency} onChange={(e) => setFlightForm({ ...flightForm, frequency: e.target.value })} />
           <input className={inputClass} placeholder="Origen (ej. Bogotá (BOG))" value={flightForm.origin} onChange={(e) => setFlightForm({ ...flightForm, origin: e.target.value })} />
           <input className={inputClass} placeholder="Destino (ej. Yopal (EYP))" value={flightForm.destination} onChange={(e) => setFlightForm({ ...flightForm, destination: e.target.value })} />
+          <div className="sm:col-span-2">
+            <p className="mb-2 text-xs text-slate-400">Logo de la aerolínea (opcional)</p>
+            <ImageUploadField value={flightForm.imageUrl} onChange={(url) => setFlightForm({ ...flightForm, imageUrl: url })} />
+          </div>
           <label className="flex items-center gap-2 rounded-2xl border border-forest-700 bg-forest-950 px-4 py-3 text-sm text-slate-300 sm:col-span-2">
             <input type="checkbox" checked={flightForm.direct} onChange={(e) => setFlightForm({ ...flightForm, direct: e.target.checked })} />
             Vuelo directo (sin escalas)
