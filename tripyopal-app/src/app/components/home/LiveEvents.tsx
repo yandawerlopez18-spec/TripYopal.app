@@ -176,8 +176,6 @@ function EventCard({ event, isToday }: { event: (typeof featuredEvents)[number];
           <div className="mt-3 flex items-center justify-between gap-2">
             <Link
               href={`/eventos/${event.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
               className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition hover:bg-forest-800 ${category.accentClass} border-forest-700`}
             >
               Ver detalles →

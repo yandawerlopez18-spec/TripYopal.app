@@ -13,12 +13,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Completa correo, asunto y mensaje." }, { status: 400 });
   }
 
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
+  const user = process.env.GMAIL_USER?.trim();
+  const rawPass = process.env.GMAIL_APP_PASSWORD?.trim();
+  const pass = rawPass?.replace(/\s+/g, "");
 
   if (!user || !pass) {
     console.error("Falta configurar GMAIL_USER / GMAIL_APP_PASSWORD en el entorno.");
     return NextResponse.json({ ok: false, error: "El envío de correo no está configurado todavía." }, { status: 500 });
+  }
+
+  if (pass.length !== 16) {
+    console.error(
+      `GMAIL_APP_PASSWORD tiene ${pass.length} caracteres; una contraseña de aplicación de Google válida tiene 16. ` +
+        "Genera una nueva en https://myaccount.google.com/apppasswords.",
+    );
+    return NextResponse.json(
+      { ok: false, error: "La configuración de correo no es válida todavía. Escríbenos directo mientras se corrige." },
+      { status: 500 },
+    );
   }
 
   try {
@@ -46,7 +58,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error enviando correo de contacto:", error);
-    return NextResponse.json({ ok: false, error: "No pudimos enviar tu solicitud. Intenta de nuevo." }, { status: 500 });
+    const isAuthError = (error as { responseCode?: number })?.responseCode === 535;
+    const message = isAuthError
+      ? "La cuenta de correo rechazó las credenciales. Verifica la contraseña de aplicación de Google."
+      : "No pudimos enviar tu solicitud. Intenta de nuevo.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
 
