@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { CategoryIcon } from "../components/home/categoryIcons";
 import { DropletIcon, ThermometerIcon, WeatherIcon, WindIcon, getWeatherKind } from "../components/home/infoIcons";
 import HourlyChart from "../components/weather/HourlyChart";
 import { CompassGauge, RingGauge, Sparkline } from "../components/weather/WeatherGauges";
@@ -138,7 +137,7 @@ export default function ClimaPage() {
 
         <div className="mt-6 text-center">
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/10 text-brand-400">
-            <CategoryIcon icon="clima" />
+            <WeatherIcon kind={weather ? getWeatherKind(weather.icon) : "partly-cloudy"} className="h-8 w-8" />
           </span>
           <h1 className="mt-4 font-[family-name:var(--font-brand)] text-4xl font-bold text-white sm:text-5xl">
             Clima en <span className="text-brand-400">Yopal, Casanare</span>
