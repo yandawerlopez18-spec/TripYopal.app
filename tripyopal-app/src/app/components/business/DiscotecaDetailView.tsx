@@ -486,12 +486,16 @@ export default function DiscotecaDetailView({
                     const featuredEvent = venueEvents[Math.min(selectedEventIndex, venueEvents.length - 1)];
                     const featuredWeekday = eventWeekday(featuredEvent.date);
                     return (
-                      <div className="overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
+                      <div className="mx-auto w-fit max-w-full overflow-hidden rounded-xl border border-forest-700 bg-forest-950">
                         {featuredEvent.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={featuredEvent.imageUrl} alt={featuredEvent.title} className="h-auto w-full" />
+                          <img
+                            src={featuredEvent.imageUrl}
+                            alt={featuredEvent.title}
+                            className="max-h-[28rem] w-auto max-w-full object-contain"
+                          />
                         ) : (
-                          <div className="h-48 w-full bg-gradient-to-br from-forest-800 to-forest-950" />
+                          <div className="h-48 w-72 max-w-full bg-gradient-to-br from-forest-800 to-forest-950" />
                         )}
                         <div className="p-4">
                           <p className="text-base font-semibold text-slate-100">{featuredEvent.title}</p>
